@@ -126,20 +126,19 @@
             border: 1px solid #dee2e6;
         }
         
-        /* 改行なし・幅に合わせて自動調整される一言メッセージ */
+        /* 改行が入っても枠にきれいに収まる一言メッセージのスタイル */
         .greeting-box {
             background: linear-gradient(135deg, #fff0f3 0%, #ffe3e8 100%);
             border: 2px dotted #ff85a2;
-            padding: 14px;
+            padding: 12px 14px;
             text-align: center;
-            font-size: clamp(0.75rem, 3.2vw, 1.05rem); /* 画面幅や文字数に合わせて収まる魔法の記述 */
+            font-size: clamp(0.75rem, 3vw, 1rem); /* 2行でもはみ出さない大きさに調整 */
             font-weight: bold;
             border-radius: 16px;
             margin-bottom: 15px;
             color: #de5c78;
-            white-space: nowrap;
+            line-height: 1.4; /* 改行の行間を少しキュッと詰めてスマートに */
             overflow: hidden;
-            text-overflow: ellipsis;
             animation: fuwafuwa 3s infinite ease-in-out;
         }
         @keyframes fuwafuwa {
@@ -170,7 +169,7 @@
             z-index: 1000; display: none; font-size: 0.75rem; min-width: 140px;
         }
         
-        /* タスクリスト（クリック可能） */
+        /* タスクリスト */
         .todo-list { list-style: none; padding: 0; margin: 0; }
         .todo-item {
             padding: 10px 14px; margin-bottom: 8px; border-left: 6px solid #ccc;
@@ -199,14 +198,13 @@
             gap: 15px; margin-top: 10px; font-size: 0.8rem; font-weight: bold;
         }
         
-        /* 企業の追加欄をきれいに二行に収めるグリッド設定 */
+        /* 企業の追加欄 */
         .form-grid-two-rows {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 15px;
             margin-bottom: 15px;
         }
-        /* 画面が狭いときは崩れないように自動調整 */
         @media (max-width: 768px) {
             .form-grid-two-rows {
                 grid-template-columns: repeat(2, 1fr);
@@ -269,7 +267,6 @@
                     <h3 style="margin-top:0; color:#ff6b8b; font-size:1.1rem; margin-bottom: 12px;">📅 今週やるべきこと (直近7日以内)</h3>
                     <ul id="todoList" class="todo-list"></ul>
                 </div>
-                <!-- 5個ずつのページ切り替えボタン -->
                 <div id="taskPagination" class="pagination-container" style="display: none;">
                     <button onclick="changeTaskPage(-1)" class="action-btn" style="padding:2px 8px;">◀ 前</button>
                     <span id="taskPageNum">1 / 1</span>
@@ -277,9 +274,9 @@
                 </div>
             </div>
             
-            <!-- 右：カレンダー（上部に時間帯一言メッセージ付き） -->
+            <!-- 右：カレンダー（上部に改行対応一言メッセージ） -->
             <div class="card cal-half">
-                <!-- 枠の幅に自動で収まる一言メッセージ -->
+                <!-- ここに新しく指定されたメッセージが改行されて入るよ -->
                 <div id="greetingMessage" class="greeting-box">こんにちは✨</div>
                 
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 5px;">
@@ -296,11 +293,10 @@
             </div>
         </div>
 
-        <!-- その下：企業の追加欄 (2行に綺麗に収まる配置) -->
+        <!-- その下：企業の追加欄 -->
         <div class="card">
             <h3 style="margin-top:0; color:#ff6b8b; font-size:1.1rem; margin-bottom:15px;">🏢 エントリー企業の追加</h3>
             <form id="companyForm">
-                <!-- 1行目 (4つ並び) -->
                 <div class="form-grid-two-rows">
                     <div><label>企業名 *</label><input type="text" id="compName" required placeholder="マスコミ・IT・SaaSなど"></div>
                     <div><label>HP URL</label><input type="url" id="compHp" placeholder="https://..."></div>
@@ -308,7 +304,6 @@
                     <div><label>マイページID</label><input type="text" id="mypageId"></div>
                 </div>
                 
-                <!-- 2行目 (4つ並び、メモも横長に綺麗に配置) -->
                 <div class="form-grid-two-rows">
                     <div>
                         <label>ES締切日</label>
@@ -354,7 +349,7 @@
             </form>
         </div>
 
-        <!-- 一番下：企業名（一覧テーブル） -->
+        <!-- 一番下：企業一覧 -->
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
                 <h3 style="margin:0; color:#ff6b8b; font-size:1.1rem;">📊 登録企業一覧</h3>
@@ -399,7 +394,6 @@
         let currentCalendarDate = new Date();
         let unsubscribeRealtime = null;
 
-        // 【修正】今週やるべきことは1ページに5個までに変更
         let currentTaskPage = 1;
         const tasksPerPage = 5;
 
@@ -416,23 +410,32 @@
             });
         })();
 
+        // 【修正】ご指定いただいた通りの時間条件・改行（innerHTML）で一言を設定する関数
         function updateGreetingMessage() {
             const now = new Date();
             const hour = now.getHours();
             const min = now.getMinutes();
-            const timeVal = hour + min / 60;
-            let msg = "やっほ〜！今日はなにするの😳💡";
+            
+            // 時間と分を合算して比較しやすい数値にする (例: 10:01 -> 10 + 1/60 = 10.0166)
+            const timeVal = hour + (min / 60);
+            let msg = "";
 
             if (timeVal >= 5.0 && timeVal <= 10.0) {
-                msg = "おはよん！今日も１日がんばろう😽✨";
+                // 5:00 ~ 10:00
+                msg = "おはよん！<br>今日も１日がんばろう😽✨";
             } else if (timeVal > 10.0 && timeVal <= 17.0) {
-                msg = "やっほ〜！今日はなにするの😳💡";
+                // 10:01 ~ 17:00
+                msg = "やっほ〜！<br>今日はなにするの😳💡";
             } else if (timeVal > 17.0 && timeVal <= 23.999) {
+                // 17:01 ~ 23:59
                 msg = "今日も１日おつかれさま😌🥂";
-            } else if (timeVal >= 0.0 && timeVal < 5.0) {
-                msg = "もう明日になったよ！がんばりすぎないでね😴🌙";
+            } else {
+                // 00:00 ~ 4:59
+                msg = "もう明日になったよ！<br>がんばりすぎないでね😴🌙";
             }
-            document.getElementById('greetingMessage').textContent = msg;
+            
+            // 改行タグを有効にするため innerHTML で流し込む
+            document.getElementById('greetingMessage').innerHTML = msg;
         }
         setInterval(updateGreetingMessage, 60000);
 
@@ -793,7 +796,6 @@
             const pagContainer = document.getElementById('taskPagination');
             const pageNumSpan = document.getElementById('taskPageNum');
             
-            // 【修正】1ページに最大5件でページ表示切り替え
             if (totalTasks > tasksPerPage) {
                 pagContainer.style.display = 'flex';
                 pageNumSpan.textContent = `${currentTaskPage} / ${totalPages}`;
