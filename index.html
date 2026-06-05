@@ -536,6 +536,21 @@ document.getElementById("searchBox")?.value.toLowerCase() || "";
             filteredCompanies.forEach(({ comp, idx }) => {
                 const tr = document.createElement('tr');
 
+                if(comp.esDeadline && !comp.esDone){
+
+    const deadline =
+      new Date(comp.esDeadline.replace(/-/g,"/"));
+
+    const today = new Date();
+
+    const diff =
+      (deadline - today) / (1000*60*60*24);
+
+    if(diff <= 3 && diff >= 0){
+        tr.style.backgroundColor = "#ffe3e3";
+    }
+}
+
                 if (editingIndex === idx) {
                     tr.className = "inline-edit-row";
                     const esObj = parseDateTimeString(comp.esDeadline);
