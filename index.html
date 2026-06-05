@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>就活スケジュール管理アプリ</title>
     
-    <!-- Firebase SDK (v8形式) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
@@ -235,7 +233,6 @@
 
     <div class="container">
         
-        <!-- ヘッダー -->
         <div class="header-area">
             <div id="appTitleDisplay" class="title-editable" onclick="changeAppTitle()">読み込み中...</div>
             <div class="auth-right">
@@ -250,10 +247,8 @@
 
         <div class="flexible-layout-wrapper">
             
-            <!-- 上段セクション (PCのみ表示) -->
             <div class="section-top-row">
                 <div class="pc-top-grid">
-                    <!-- タスク一覧 -->
                     <div class="card">
                         <h3 style="margin-top:0; color:#ff6b8b; font-size:1.0rem; margin-bottom: 12px; text-align: left;">📅 今週やるべきこと (直近7日以内)</h3>
                         <ul id="todoList" class="todo-list"></ul>
@@ -263,7 +258,6 @@
                             <button onclick="changeTaskPage(1)" class="action-btn" style="padding:2px 8px;">次 ▶</button>
                         </div>
                     </div>
-                    <!-- カレンダー -->
                     <div>
                         <div id="greetingMessage" class="greeting-box">こんにちは✨</div>
                         <div class="card" style="padding: 16px;">
@@ -281,7 +275,6 @@
                 </div>
             </div>
             
-            <!-- 📊 登録企業一覧 (横幅の比率を調整し次回日程とステータスを左寄せ、メモを拡大) -->
             <div class="card section-company-list">
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
                     <h3 style="margin:0; color:#ff6b8b; font-size:1.0rem; text-align: left;">📊 登録企業一覧</h3>
@@ -306,7 +299,6 @@
                 </div>
             </div>
 
-            <!-- 🏢 エントリー企業の追加 (1行にまとめたスッキリ配置) -->
             <div class="card section-add-company" style="padding: 12px 16px;">
                 <h3 style="margin-top:0; color:#ff6b8b; font-size:0.9rem; margin-bottom:8px; text-align: left;">🏢 エントリー企業の追加</h3>
                 <form id="companyForm">
@@ -316,7 +308,6 @@
                         <div><label>マイページURL</label><input type="url" id="mypageUrl" placeholder="https://..."></div>
                         <div><label>マイページID</label><input type="text" id="mypageId"></div>
                         
-                        <!-- ES締切日 -->
                         <div class="date-time-card-box flex-wide">
                             <label style="color:#ff6b8b;">ES締切日</label>
                             <input type="date" id="esDeadlineDate">
@@ -326,7 +317,6 @@
                             </div>
                         </div>
                         
-                        <!-- 次回の予定日時 -->
                         <div class="date-time-card-box flex-wide">
                             <label style="color:#ff6b8b;">次回予定/日時</label>
                             <select id="nextDateType" style="margin-bottom:2px; padding: 2px 4px;">
@@ -385,7 +375,7 @@
         window.companies = [];
         window.userName = "ユーザー";
         window.currentUid = null;
-        let editingIndex = null;
+        let editingIndex = null; // 元の配列(companies)上のインデックスを保持
         let currentCalendarDate = new Date();
         let unsubscribeRealtime = null;
 
@@ -552,7 +542,7 @@
         }
 
         // ===================================================
-        // 📊 テーブル表のレンダリング
+        // 📊 テーブル表のレンダリング (バグ修正版)
         // ===================================================
         function renderTable() {
             const tbody = document.getElementById('companyTableBody');
@@ -560,9 +550,12 @@
             tbody.innerHTML = '';
 
             const keyword = document.getElementById("searchBox")?.value.toLowerCase() || "";
+            
+            // 元の配列のインデックスを保存しながらソートオブジェクトを生成
             const indexedCompanies = companies.map((comp, idx) => ({ comp, idx }));
             indexedCompanies.sort((a, b) => a.comp.name.localeCompare(b.comp.name, 'ja'));
 
+            // 検索キーワードでフィルタリング
             const filteredCompanies = indexedCompanies.filter(({ comp }) => comp.name.toLowerCase().includes(keyword));
 
             if (filteredCompanies.length === 0) {
@@ -572,8 +565,9 @@
 
             filteredCompanies.forEach(({ comp, idx }) => {
                 const tr = document.createElement('tr');
-                tr.className = 'status-row-white'; // 選考ステータスごとの色はつけない
+                tr.className = 'status-row-white';
 
+                // ここを修正：現在編集対象に選ばれているインデックス（editingIndex）と、この行の元のインデックス（idx）が一致するかで判定
                 if (editingIndex === idx) {
                     // 🛠️ テーブル内インライン編集モード
                     const esObj = parseDateTimeString(comp.esDeadline);
@@ -650,12 +644,21 @@
                             </div>
                         </td>
                     `;
-                    if(esObj.hasTime){ document.getElementById(`inline_esHour_${idx}`).value = esObj.hour; document.getElementById(`inline_esMin_${idx}`).value = esObj.min; }
-                    if(intObj.hasTime){ document.getElementById(`inline_intHour_${idx}`).value = intObj.hour; document.getElementById(`inline_intMin_${idx}`).value = intObj.min; }
+                    // プルダウンの遅延初期化バリューセット
+                    setTimeout(() => {
+                        if(esObj.hasTime){ 
+                            const eh = document.getElementById(`inline_esHour_${idx}`);
+                            const em = document.getElementById(`inline_esMin_${idx}`);
+                            if(eh) eh.value = esObj.hour; if(em) em.value = esObj.min;
+                        }
+                        if(intObj.hasTime){ 
+                            const ih = document.getElementById(`inline_intHour_${idx}`);
+                            const im = document.getElementById(`inline_intMin_${idx}`);
+                            if(ih) ih.value = intObj.hour; if(im) im.value = intObj.min;
+                        }
+                    }, 0);
                 } else {
                     // 👀 通常表示テーブル行モード
-                    
-                    // 【修正】マイページURLとIDを完全に分けて2行で構成 (下線なし)
                     let mypageHtml = '<span style="color:#ccc;">-</span>';
                     if (comp.mypageUrl || comp.mypageId) {
                         const linkPart = comp.mypageUrl ? `<a href="${comp.mypageUrl}" target="_blank">${escapeHtml(formatMypageUrlText(comp.mypageUrl))}</a>` : '<span style="color:#868e96;">-</span>';
@@ -663,7 +666,6 @@
                         mypageHtml = `<div class="mypage-inline-info"><div>${linkPart}</div><div>${idPart}</div></div>`;
                     }
 
-                    // ES提出期限/状況の構成
                     let esDeadlineHtml = "-";
                     if (comp.esDeadline) {
                         const esData = splitDeadlineString(comp.esDeadline);
@@ -683,7 +685,6 @@
                         `;
                     }
 
-                    // 次回日程の構成
                     let nextScheduleHtml = "-";
                     if(comp.interviewDate) {
                         const intData = splitInterviewString(comp.interviewDate);
@@ -900,7 +901,6 @@
         
         document.addEventListener('click', () => { document.querySelectorAll('.calendar-popup').forEach(p => p.style.display = 'none'); });
 
-        // 【修正】カレンダー上のまる（ドット）の色をもっとふんわりしたパステルカラーにする
         function getDotColor(status) {
             switch(status) {
                 case '未エントリー': case '説明会': case 'その他': return '#e2e8f0'; // ミルキーグレー
@@ -977,7 +977,6 @@
             }
         }
 
-        // 新規追加フォームの送信処理
         document.getElementById('companyForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const esFinal = buildDateTimeString('esDeadlineDate', 'esHasTime', 'esHour', 'esMin');
