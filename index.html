@@ -100,7 +100,7 @@
         .calendar-cell.today { border: 2px solid #ff6b8b; background: #fff0f3; }
         .calendar-day-num { font-weight: bold; font-size: 0.75rem; margin-left: 2px;}
         .calendar-dots { display: flex; gap: 3px; justify-content: center; margin-top: 2px; }
-        .cal-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; cursor: pointer; border: 1px solid #ffa6ba; }
+        .cal-dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; cursor: pointer; border: 1px solid rgba(0, 0, 0, 0.05); }
         
         /* カレンダーポップアップ */
         .calendar-popup {
@@ -131,38 +131,55 @@
            📊 表形式（テーブル表示）用の基本スタイル
            =================================================== */
         .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; min-width: 900px; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; min-width: 950px; }
         th, td { padding: 12px 10px; border-bottom: 1px solid var(--border-soft); box-sizing: border-box; }
         th { background-color: #fff0f2; color: #ff6b8b; font-weight: bold; }
         tr:hover { background-color: rgba(255, 183, 197, 0.05); }
         
         /* 企業名・URLなどの個別パーツ調整 */
         .comp-name-black { color: #000000 !important; text-decoration: none; }
-        .comp-name-black.has-link { text-decoration: underline; }
+        .comp-name-black.has-link { text-decoration: none; }
+        .comp-name-black.has-link:hover { text-decoration: underline; }
         
-        /* マイページ情報の1行黒文字用スタイル */
-        .mypage-inline-info { color: #000000 !important; font-weight: normal; }
-        .mypage-inline-info a { color: #000000 !important; text-decoration: underline; font-weight: bold; }
+        /* マイページ情報のスタイル（下線を引かない） */
+        .mypage-inline-info { color: #000000 !important; font-weight: normal; display: flex; flex-direction: column; gap: 2px; }
+        .mypage-inline-info a { color: #000000 !important; text-decoration: none; font-weight: bold; }
+        .mypage-inline-info a:hover { text-decoration: underline; }
+        .mypage-id-label { font-size: 0.75rem; color: #5c4d50; }
         
         /* 2行構成用スタイル */
         .two-line-cell { display: flex; flex-direction: column; gap: 2px; }
         .small-sub-text { font-size: 0.75rem; color: #868e96; }
         
-        /* メモ専用の2行制限スタイル */
+        /* メモ専用のボックススタイル */
         .memo-limited-box {
             font-size: 0.75rem; color: #6e5d60; white-space: pre-wrap; 
             background: rgba(255, 255, 255, 0.6); padding: 4px 6px; border-radius: 6px; 
-            margin-top: 2px; max-width: 160px; word-break: break-all;
-            display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+            margin-top: 2px; width: 100%; box-sizing: border-box; word-break: break-all;
         }
 
-        /* 入力欄パーツ */
-        .form-grid-two-rows { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 15px; }
-        .date-time-card-box { border: 2px solid var(--border-soft); padding: 12px; border-radius: 12px; background: #fffbfb; box-sizing: border-box; width: 100%; }
-        label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 0.85rem; color: #7c6a6e; text-align: left; }
+        /* 🏢 企業の追加：1行にまとめる用のレイアウト */
+        .form-row-single {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            flex-wrap: nowrap;
+            width: 100%;
+        }
+        .form-row-single > div {
+            flex: 1;
+            min-width: 0; /* レスポンシブ縮小用 */
+        }
+        /* 横幅にメリハリをつける調整 */
+        .form-row-single > .flex-wide { flex: 1.4; }
+        .form-row-single > .flex-narrow { flex: 0.8; }
+
+        .date-time-card-box { border: 1px solid var(--border-soft); padding: 6px; border-radius: 10px; background: #fffbfb; box-sizing: border-box; width: 100%; }
+        label { display: block; margin-bottom: 2px; font-weight: bold; font-size: 0.75rem; color: #7c6a6e; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
         input[type="text"], input[type="date"], input[type="url"], select, textarea {
-            width: 100%; padding: 10px; border: 2px solid var(--border-soft); border-radius: 12px;
-            box-sizing: border-box; font-size: 0.9rem; color: var(--text-dark); background-color: #fffafb; transition: all 0.2s; text-align: left;
+            width: 100%; padding: 6px 8px; border: 2px solid var(--border-soft); border-radius: 10px;
+            box-sizing: border-box; font-size: 0.8rem; color: var(--text-dark); background-color: #fffafb; transition: all 0.2s; text-align: left;
         }
         input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary-pink); background-color: #fff; }
         
@@ -173,14 +190,14 @@
         .action-btn:hover { background: #fff0f3; border-color: var(--primary-pink); }
         .loading-mask { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); display:none; justify-content:center; align-items:center; z-index:9999; font-weight:bold; }
 
-        .time-box-flex { display: flex; align-items: center; gap: 4px; margin-top: 4px; width: 100%; box-sizing: border-box; }
-        .time-box-flex select { flex: 1; width: 100% !important; min-width: 0; padding: 6px !important; }
+        .time-box-flex { display: flex; align-items: center; gap: 2px; margin-top: 2px; width: 100%; box-sizing: border-box; }
+        .time-box-flex select { flex: 1; width: 100% !important; min-width: 0; padding: 2px !important; font-size: 0.75rem; }
 
         /* インライン編集時の一枠用ボックス幅 */
-        .table-edit-box { width: 100% !important; padding: 6px !important; font-size: 0.8rem !important; border-radius: 8px !important; }
+        .table-edit-box { width: 100% !important; padding: 4px !important; font-size: 0.8rem !important; border-radius: 8px !important; }
 
         /* ===================================================
-           📱 スマホ表示時 (横幅920px以下での配置調整)
+           📱 スマホ表示時
            =================================================== */
         @media (max-width: 920px) {
             body { padding: 8px; }
@@ -198,7 +215,8 @@
             .section-company-list { order: 1; } 
             .section-add-company { order: 2; }  
 
-            .form-grid-two-rows { grid-template-columns: 1fr; gap: 10px; }
+            /* スマホでは1行はみ出るので縦並びに崩す */
+            .form-row-single { flex-direction: column; align-items: stretch; gap: 10px; }
             label { font-size: 0.75rem; margin-bottom: 2px; }
             
             .date-time-card-box {
@@ -209,7 +227,7 @@
                 padding: 8px 10px; font-size: 0.85rem; border-radius: 12px; width: 100% !important; box-sizing: border-box;
             }
             textarea { height: 38px; }
-            #companyForm button[type="submit"] { width: 100%; padding: 10px; font-size: 0.85rem; }
+            #companyForm button[type="submit"] { width: 100%; padding: 10px; font-size: 0.85rem; margin-top: 4px; }
         }
     </style>
 </head>
@@ -263,7 +281,7 @@
                 </div>
             </div>
             
-            <!-- 📊 登録企業一覧 -->
+            <!-- 📊 登録企業一覧 (横幅の比率を調整し次回日程とステータスを左寄せ、メモを拡大) -->
             <div class="card section-company-list">
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
                     <h3 style="margin:0; color:#ff6b8b; font-size:1.0rem; text-align: left;">📊 登録企業一覧</h3>
@@ -274,13 +292,13 @@
                     <table>
                         <thead>
                             <tr>
-                                <th style="width: 15%;">企業名</th>
-                                <th style="width: 25%;">マイページ / ID</th>
-                                <th style="width: 21%;">ES提出期限/状況</th>
-                                <th style="width: 16%;">次回日程</th>
+                                <th style="width: 14%;">企業名</th>
+                                <th style="width: 16%;">マイページ / ID</th>
+                                <th style="width: 18%;">ES提出期限/状況</th>
+                                <th style="width: 13%;">次回日程</th>
                                 <th style="width: 11%;">ステータス</th>
-                                <th style="width: 12%;">メモ</th>
-                                <th style="width: 10%;">操作</th>
+                                <th style="width: 19%;">メモ</th>
+                                <th style="width: 9%;">操作</th>
                             </tr>
                         </thead>
                         <tbody id="companyTableBody"></tbody>
@@ -288,45 +306,43 @@
                 </div>
             </div>
 
-            <!-- 🏢 エントリー企業の追加 -->
-            <div class="card section-add-company" style="padding: 16px;">
-                <h3 style="margin-top:0; color:#ff6b8b; font-size:0.95rem; margin-bottom:10px; text-align: left;">🏢 エントリー企業の追加</h3>
+            <!-- 🏢 エントリー企業の追加 (1行にまとめたスッキリ配置) -->
+            <div class="card section-add-company" style="padding: 12px 16px;">
+                <h3 style="margin-top:0; color:#ff6b8b; font-size:0.9rem; margin-bottom:8px; text-align: left;">🏢 エントリー企業の追加</h3>
                 <form id="companyForm">
-                    <div class="form-grid-two-rows">
-                        <div><label>企業名 *</label><input type="text" id="compName" required placeholder="マスコミ・IT・SaaSなど"></div>
+                    <div class="form-row-single">
+                        <div class="flex-wide"><label>企業名 *</label><input type="text" id="compName" required placeholder="企業名"></div>
                         <div><label>HP URL</label><input type="url" id="compHp" placeholder="https://..."></div>
                         <div><label>マイページURL</label><input type="url" id="mypageUrl" placeholder="https://..."></div>
                         <div><label>マイページID</label><input type="text" id="mypageId"></div>
-                    </div>
-                    
-                    <div class="form-grid-two-rows" style="margin-bottom: 5px;">
+                        
                         <!-- ES締切日 -->
-                        <div class="date-time-card-box">
+                        <div class="date-time-card-box flex-wide">
                             <label style="color:#ff6b8b;">ES締切日</label>
                             <input type="date" id="esDeadlineDate">
-                            <label style="font-size:0.75rem; margin-top:4px; font-weight:normal; text-align: left;"><input type="checkbox" id="esHasTime" onchange="document.getElementById('esTimeContainer').style.display=this.checked?'flex':'none'"> 時間指定</label>
+                            <label style="font-size:0.7rem; margin-top:2px; font-weight:normal; text-align: left;"><input type="checkbox" id="esHasTime" onchange="document.getElementById('esTimeContainer').style.display=this.checked?'flex':'none'"> 時間</label>
                             <div id="esTimeContainer" class="time-box-flex" style="display:none;">
-                                <select id="esHour"></select>時<select id="esMin"></select>分
+                                <select id="esHour"></select>:<select id="esMin"></select>
                             </div>
                         </div>
                         
                         <!-- 次回の予定日時 -->
-                        <div class="date-time-card-box">
-                            <label style="color:#ff6b8b;">次回の予定タイプ / 日時</label>
-                            <select id="nextDateType" style="margin-bottom:4px;">
+                        <div class="date-time-card-box flex-wide">
+                            <label style="color:#ff6b8b;">次回予定/日時</label>
+                            <select id="nextDateType" style="margin-bottom:2px; padding: 2px 4px;">
                                 <option value="">(なし)</option><option value="説明会">説明会</option><option value="GD">GD</option>
                                 <option value="テスト">テスト</option><option value="一次面接">一次面接</option><option value="二次面接">二次面接</option>
                                 <option value="最終面接">最終面接</option><option value="インターン">インターン</option><option value="その他">その他</option>
                             </select>
                             <input type="date" id="interviewDateDate">
-                            <label style="font-size:0.75rem; margin-top:4px; font-weight:normal; text-align: left;"><input type="checkbox" id="interviewHasTime" onchange="document.getElementById('interviewTimeContainer').style.display=this.checked?'flex':'none'"> 時間指定</label>
+                            <label style="font-size:0.7rem; margin-top:2px; font-weight:normal; text-align: left;"><input type="checkbox" id="interviewHasTime" onchange="document.getElementById('interviewTimeContainer').style.display=this.checked?'flex':'none'"> 時間</label>
                             <div id="interviewTimeContainer" class="time-box-flex" style="display:none;">
-                                <select id="interviewHour"></select>時<select id="interviewMin"></select>分
+                                <select id="interviewHour"></select>:<select id="interviewMin"></select>
                             </div>
                         </div>
 
-                        <div>
-                            <label>選考ステータス</label>
+                        <div class="flex-narrow">
+                            <label>ステータス</label>
                             <select id="selectionStatus">
                                 <option value="未エントリー">未エントリー</option><option value="説明会">説明会</option><option value="ES作成中">ES作成中</option>
                                 <option value="ES提出済み">ES提出済み</option><option value="テスト">テスト</option><option value="GD">GD</option>
@@ -335,13 +351,13 @@
                                 <option value="不合格">不合格</option><option value="その他">その他</option>
                             </select>
                         </div>
-                        <div>
+                        <div class="flex-wide">
                             <label>メモ</label>
-                            <textarea id="memo" rows="2" style="height:36px; resize:none;" placeholder="面接の準備など"></textarea>
+                            <input type="text" id="memo" placeholder="準備など">
                         </div>
-                    </div>
-                    <div style="text-align: right; margin-top: 4px;">
-                        <button type="submit" class="btn-cute">この企業を登録する ✨</button>
+                        <div style="flex:none;">
+                            <button type="submit" class="btn-cute" style="padding: 6px 14px; font-size: 0.8rem; border-radius: 10px; box-shadow: 0 2px 0px #e09ba9;">追加 ✨</button>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -556,7 +572,7 @@
 
             filteredCompanies.forEach(({ comp, idx }) => {
                 const tr = document.createElement('tr');
-                tr.className = 'status-row-white'; // 選考ステータスごとの色はつけない（白に統一）
+                tr.className = 'status-row-white'; // 選考ステータスごとの色はつけない
 
                 if (editingIndex === idx) {
                     // 🛠️ テーブル内インライン編集モード
@@ -571,7 +587,7 @@
                         <td><input type="text" id="inline_name_${idx}" class="table-edit-box" value="${escapeHtml(comp.name)}" required></td>
                         <td>
                             <div style="display:flex; flex-direction:column; gap:4px;">
-                                <input type="url" id="inline_mypageUrl_${idx}" class="table-edit-box" value="${escapeHtml(comp.mypageUrl || '')}" placeholder="マイページURL">
+                                <input type="url" id="inline_mypageUrl_${idx}" class="table-edit-box" value="${escapeHtml(comp.mypageUrl || '')}" placeholder="URL">
                                 <input type="text" id="inline_mypageId_${idx}" class="table-edit-box" value="${escapeHtml(comp.mypageId || '')}" placeholder="ID">
                             </div>
                         </td>
@@ -639,15 +655,15 @@
                 } else {
                     // 👀 通常表示テーブル行モード
                     
-                    // マイページとIDを1行で構成 (黒文字化)
+                    // 【修正】マイページURLとIDを完全に分けて2行で構成 (下線なし)
                     let mypageHtml = '<span style="color:#ccc;">-</span>';
                     if (comp.mypageUrl || comp.mypageId) {
-                        const linkPart = comp.mypageUrl ? `<a href="${comp.mypageUrl}" target="_blank">${escapeHtml(formatMypageUrlText(comp.mypageUrl))}</a>` : '-';
-                        const idPart = comp.mypageId ? escapeHtml(comp.mypageId) : '-';
-                        mypageHtml = `<div class="mypage-inline-info">${linkPart} / ${idPart}</div>`;
+                        const linkPart = comp.mypageUrl ? `<a href="${comp.mypageUrl}" target="_blank">${escapeHtml(formatMypageUrlText(comp.mypageUrl))}</a>` : '<span style="color:#868e96;">-</span>';
+                        const idPart = comp.mypageId ? `<span class="mypage-id-label">ID: ${escapeHtml(comp.mypageId)}</span>` : '<span class="mypage-id-label">ID: -</span>';
+                        mypageHtml = `<div class="mypage-inline-info"><div>${linkPart}</div><div>${idPart}</div></div>`;
                     }
 
-                    // ES提出期限/状況の構成 (チェックボックスの右側に二行: 上部日時、下部ステータス)
+                    // ES提出期限/状況の構成
                     let esDeadlineHtml = "-";
                     if (comp.esDeadline) {
                         const esData = splitDeadlineString(comp.esDeadline);
@@ -882,17 +898,17 @@
             if (targetPopup && !alreadyOpen) { targetPopup.style.display = 'block'; }
         };
         
-         document.addEventListener('click', () => { document.querySelectorAll('.calendar-popup').forEach(p => p.style.display = 'none'); });
+        document.addEventListener('click', () => { document.querySelectorAll('.calendar-popup').forEach(p => p.style.display = 'none'); });
 
-        // カレンダー上のまる（ドット）を企業の選考ステータスに合わせた色にする
+        // 【修正】カレンダー上のまる（ドット）の色をもっとふんわりしたパステルカラーにする
         function getDotColor(status) {
             switch(status) {
-                case '未エントリー': case '説明会': case 'その他': return '#ced4da'; // 灰色系
-                case 'ES作成中': case 'ES提出済み': return '#ff85a2'; // ピンク系
-                case 'テスト': case 'GD': case '一次面接': case '二次面接': case '最終面接': return '#ffd43b'; // 黄色系
-                case 'インターン': case '結果待ち': return '#40c057'; // 緑系
-                case '内定': return '#7950f2'; // 紫系
-                default: return '#ced4da';
+                case '未エントリー': case '説明会': case 'その他': return '#e2e8f0'; // ミルキーグレー
+                case 'ES作成中': case 'ES提出済み': return '#ffccd5'; // ふんわりミルキーピンク
+                case 'テスト': case 'GD': case '一次面接': case '二次面接': case '最終面接': return '#fff3bf'; // レモンマカロンイエロー
+                case 'インターン': case '結果待ち': return '#c3fae8'; // さわやかパステルミント
+                case '内定': return '#eebefa'; // ゆめかわラベンダーパープル
+                default: return '#e2e8f0';
             }
         }
 
@@ -948,7 +964,6 @@
                     const clickInfo = dayEvents.map(e => e.text).join('<br>');
                     const dot = document.createElement('span');
                     dot.className = `cal-dot`;
-                    // その日の最初の予定を持つ企業の選考ステータスに合わせた色を設定
                     dot.style.backgroundColor = getDotColor(dayEvents[0].status || '未エントリー');
                     dot.setAttribute('onclick', `togglePopupInCell(event, ${i})`);
                     dotsContainer.appendChild(dot);
