@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>就活スケジュール管理アプリ</title>
     
+    <!-- Firebase SDK (v8形式) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
@@ -83,7 +85,7 @@
         }
         @keyframes fuwafuwa { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 
-        /* PCレイアウト */
+        /* PC・共通レイアウト */
         .pc-top-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 24px; align-items: start; }
         .flexible-layout-wrapper { display: flex; flex-direction: column; }
         .section-top-row { order: 1; }
@@ -125,6 +127,15 @@
         .btn-task-yet { background: #adb5bd; color: white; }
         .pagination-container { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 10px; font-size: 0.8rem; font-weight: bold; }
         
+        /* ===================================================
+           📊 表形式（テーブル表示）用の基本スタイル
+           =================================================== */
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; min-width: 850px; }
+        th, td { padding: 12px 10px; border-bottom: 1px solid var(--border-soft); box-sizing: border-box; }
+        th { background-color: #fff0f2; color: #ff6b8b; font-weight: bold; }
+        tr:hover { background-color: rgba(255, 183, 197, 0.05); }
+        
         /* 入力欄パーツ */
         .form-grid-two-rows { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 15px; }
         .date-time-card-box { border: 2px solid var(--border-soft); padding: 12px; border-radius: 12px; background: #fffbfb; box-sizing: border-box; width: 100%; }
@@ -147,35 +158,14 @@
         .action-btn:hover { background: #fff0f3; border-color: var(--primary-pink); }
         .loading-mask { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); display:none; justify-content:center; align-items:center; z-index:9999; font-weight:bold; }
 
-        /* ===================================================
-           📱 アコーディオン式モバイル表示用カードスタイル
-           =================================================== */
-        .mobile-company-card {
-            border: 2px solid var(--border-soft); border-radius: 16px; margin-bottom: 12px;
-            overflow: hidden; background: white; box-sizing: border-box; width: 100%;
-        }
-        .mobile-card-header {
-            padding: 14px 16px; display: flex; justify-content: space-between; align-items: center;
-            cursor: pointer; user-select: none; box-sizing: border-box; width: 100%; gap: 10px;
-        }
-        .mobile-card-header-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
-        .mobile-card-title { font-weight: bold; font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .mobile-arrow { font-size: 0.85rem; color: #a08a8e; transition: transform 0.2s; font-weight: bold; flex-shrink: 0; }
-        .mobile-arrow.open { transform: rotate(180deg); }
-        
-        .mobile-card-body { display: none; padding: 16px; border-top: 1px dashed var(--border-soft); background: #fffdfd; box-sizing: border-box; width: 100%; }
-        .mobile-info-row { margin-bottom: 12px; font-size: 0.85rem; text-align: left; }
-        .mobile-info-row:last-child { margin-bottom: 0; }
-        .mobile-info-label { font-weight: bold; color: #ff6b8b; font-size: 0.75rem; margin-bottom: 2px; }
-        .mobile-info-value { word-break: break-all; line-height: 1.4; color: var(--text-dark); }
-        
-        .mobile-edit-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; width: 100%; box-sizing: border-box; text-align: left; }
-        .mobile-edit-full { grid-column: span 2; display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }
         .time-box-flex { display: flex; align-items: center; gap: 4px; margin-top: 4px; width: 100%; box-sizing: border-box; }
         .time-box-flex select { flex: 1; width: 100% !important; min-width: 0; padding: 6px !important; }
 
+        /* インライン編集時の一枠用ボックス幅 */
+        .table-edit-box { width: 100% !important; padding: 6px !important; font-size: 0.8rem !important; border-radius: 8px !important; }
+
         /* ===================================================
-           📱 スマホ・PC分割画面表示時 (横幅920px以下)
+           📱 スマホ表示時 (横幅920px以下での配置調整)
            =================================================== */
         @media (max-width: 920px) {
             body { padding: 8px; }
@@ -205,10 +195,6 @@
             }
             textarea { height: 38px; }
             #companyForm button[type="submit"] { width: 100%; padding: 10px; font-size: 0.85rem; }
-
-            .mobile-edit-container { grid-template-columns: 1fr; gap: 8px; }
-            .mobile-edit-full { grid-column: span 1; flex-direction: column; gap: 6px; }
-            .mobile-edit-container .date-time-card-box { width: 100% !important; box-sizing: border-box; }
         }
     </style>
 </head>
@@ -216,6 +202,7 @@
 
     <div class="container">
         
+        <!-- ヘッダー -->
         <div class="header-area">
             <div id="appTitleDisplay" class="title-editable" onclick="changeAppTitle()">読み込み中...</div>
             <div class="auth-right">
@@ -230,8 +217,10 @@
 
         <div class="flexible-layout-wrapper">
             
+            <!-- 上段セクション (PCのみ表示) -->
             <div class="section-top-row">
                 <div class="pc-top-grid">
+                    <!-- タスク一覧 -->
                     <div class="card">
                         <h3 style="margin-top:0; color:#ff6b8b; font-size:1.0rem; margin-bottom: 12px; text-align: left;">📅 今週やるべきこと (直近7日以内)</h3>
                         <ul id="todoList" class="todo-list"></ul>
@@ -241,6 +230,7 @@
                             <button onclick="changeTaskPage(1)" class="action-btn" style="padding:2px 8px;">次 ▶</button>
                         </div>
                     </div>
+                    <!-- カレンダー -->
                     <div>
                         <div id="greetingMessage" class="greeting-box">こんにちは✨</div>
                         <div class="card" style="padding: 16px;">
@@ -257,14 +247,32 @@
                 </div>
             </div>
             
+            <!-- 📊 登録企業一覧（表形式一元化） -->
             <div class="card section-company-list">
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
                     <h3 style="margin:0; color:#ff6b8b; font-size:1.0rem; text-align: left;">📊 登録企業一覧</h3>
                     <input type="text" id="searchBox" placeholder="企業名で探す... 🔍" oninput="renderTable()" style="max-width:220px; padding:6px 12px; border-radius:20px; width:100%;">
                 </div>
-                <div id="companyMobileList"></div>
+                
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 14%;">企業名</th>
+                                <th style="width: 13%;">マイページ</th>
+                                <th style="width: 11%;">マイページID</th>
+                                <th style="width: 20%;">ES提出締切日</th>
+                                <th style="width: 18%;">次回の選考日時</th>
+                                <th style="width: 11%;">ステータス</th>
+                                <th style="width: 13%;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="companyTableBody"></tbody>
+                    </table>
+                </div>
             </div>
 
+            <!-- 🏢 エントリー企業の追加 -->
             <div class="card section-add-company" style="padding: 16px;">
                 <h3 style="margin-top:0; color:#ff6b8b; font-size:0.95rem; margin-bottom:10px; text-align: left;">🏢 エントリー企業の追加</h3>
                 <form id="companyForm">
@@ -276,6 +284,7 @@
                     </div>
                     
                     <div class="form-grid-two-rows" style="margin-bottom: 5px;">
+                        <!-- ES締切日 -->
                         <div class="date-time-card-box">
                             <label style="color:#ff6b8b;">ES締切日</label>
                             <input type="date" id="esDeadlineDate">
@@ -285,6 +294,7 @@
                             </div>
                         </div>
                         
+                        <!-- 次回の予定日時 -->
                         <div class="date-time-card-box">
                             <label style="color:#ff6b8b;">次回の予定タイプ / 日時</label>
                             <select id="nextDateType" style="margin-bottom:4px;">
@@ -344,7 +354,6 @@
         window.userName = "ユーザー";
         window.currentUid = null;
         let editingIndex = null;
-        let openCardIndex = null; // どのアコーディオンが開いているかを管理
         let currentCalendarDate = new Date();
         let unsubscribeRealtime = null;
 
@@ -366,7 +375,7 @@
             initTimeSelectsForElement(document.getElementById('interviewHour'), document.getElementById('interviewMin'));
         })();
 
-        // リアルタイムあいさつメッセージの更新
+        // あいさつメッセージ更新
         function updateGreetingMessage() {
             const now = new Date();
             const hour = now.getHours();
@@ -505,12 +514,12 @@
         }
 
         // ===================================================
-        // 📊 登録企業アコーディオンカードの描画
+        // 📊 テーブル表のレンダリング
         // ===================================================
         function renderTable() {
-            const targetContainer = document.getElementById('companyMobileList');
-            if (!targetContainer) return;
-            targetContainer.innerHTML = '';
+            const tbody = document.getElementById('companyTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
 
             const keyword = document.getElementById("searchBox")?.value.toLowerCase() || "";
             const indexedCompanies = companies.map((comp, idx) => ({ comp, idx }));
@@ -519,19 +528,17 @@
             const filteredCompanies = indexedCompanies.filter(({ comp }) => comp.name.toLowerCase().includes(keyword));
 
             if (filteredCompanies.length === 0) {
-                targetContainer.innerHTML = `<div style="text-align:center; color:#868e96; padding:20px; font-size:0.85rem;">企業がまだ登録されていないよ🔍</div>`;
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#868e96; padding:20px;">企業がまだ登録されていないよ🔍</td></tr>`;
                 return;
             }
 
             filteredCompanies.forEach(({ comp, idx }) => {
-                const cardDiv = document.createElement('div');
-                cardDiv.className = 'mobile-company-card';
-                
+                const tr = document.createElement('tr');
                 const bgClass = getStatusColorClass(comp.status);
-                const isCurrentlyOpen = (openCardIndex === idx);
+                tr.className = bgClass;
 
                 if (editingIndex === idx) {
-                    // 🛠️ 編集モード
+                    // 🛠️ テーブル内インライン編集モード
                     const esObj = parseDateTimeString(comp.esDeadline);
                     const intObj = parseDateTimeString(comp.interviewDate);
                     
@@ -539,199 +546,145 @@
                     for(let i=0; i<24; i++) { let v = String(i).padStart(2, '0'); hOpts += `<option value="${v}">${v}</option>`; }
                     for(let i=0; i<60; i+=5) { let v = String(i).padStart(2, '0'); mOpts += `<option value="${v}">${v}</option>`; }
 
-                    cardDiv.innerHTML = `
-                        <div class="mobile-edit-container ${bgClass}" style="padding: 14px;">
-                            <div style="grid-column: span 2;"><label>企業名 *</label><input type="text" id="mob_name_${idx}" value="${escapeHtml(comp.name)}" required></div>
-                            <div><label>HP URL</label><input type="url" id="mob_hp_${idx}" value="${escapeHtml(comp.hp || '')}"></div>
-                            <div><label>マイページURL</label><input type="url" id="mob_mypageUrl_${idx}" value="${escapeHtml(comp.mypageUrl || '')}"></div>
-                            <div style="grid-column: span 2;"><label>マイページID</label><input type="text" id="mob_mypageId_${idx}" value="${escapeHtml(comp.mypageId || '')}"></div>
-                            
-                            <div class="date-time-card-box">
-                                <label style="margin-top:0; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="mob_esDone_${idx}" ${comp.esDone ? 'checked' : ''} style="width:auto !important; margin:0;"> ES提出完了にする</label>
-                                <label style="margin-top:6px;">ES締切日</label>
-                                <input type="date" id="mob_esDate_${idx}" value="${esObj.date}">
-                                <label style="font-weight:normal; display:flex; align-items:center; gap:6px; margin-top:4px;"><input type="checkbox" id="mob_esHasTime_${idx}" ${esObj.hasTime?'checked':''} onchange="document.getElementById('mob_esTimeBox_${idx}').style.display=this.checked?'flex':'none'" style="width:auto !important; margin:0;"> 時間指定</label>
-                                <div id="mob_esTimeBox_${idx}" class="time-box-flex" style="display:${esObj.hasTime?'flex':'none'};">
-                                    <select id="mob_esHour_${idx}">${hOpts}</select>時<select id="mob_esMin_${idx}">${mOpts}</select>分
-                                </div>
+                    tr.innerHTML = `
+                        <td><input type="text" id="inline_name_${idx}" class="table-edit-box" value="${escapeHtml(comp.name)}" required></td>
+                        <td><input type="url" id="inline_mypageUrl_${idx}" class="table-edit-box" value="${escapeHtml(comp.mypageUrl || '')}" placeholder="URL"></td>
+                        <td><input type="text" id="inline_mypageId_${idx}" class="table-edit-box" value="${escapeHtml(comp.mypageId || '')}"></td>
+                        
+                        <td>
+                            <label style="margin:0; display:flex; align-items:center; gap:4px; font-size:0.75rem;"><input type="checkbox" id="inline_esDone_${idx}" ${comp.esDone ? 'checked' : ''} style="width:auto;">提出済</label>
+                            <input type="date" id="inline_esDate_${idx}" class="table-edit-box" value="${esObj.date}" style="margin-top:2px;">
+                            <label style="font-weight:normal; font-size:0.7rem; display:flex; align-items:center; gap:4px; margin-top:2px;"><input type="checkbox" id="inline_esHasTime_${idx}" ${esObj.hasTime?'checked':''} onchange="document.getElementById('inline_esTimeBox_${idx}').style.display=this.checked?'flex':'none'" style="width:auto;">時間指定</label>
+                            <div id="inline_esTimeBox_${idx}" class="time-box-flex" style="display:${esObj.hasTime?'flex':'none'};">
+                                <select id="inline_esHour_${idx}" class="table-edit-box">${hOpts}</select>:<select id="inline_esMin_${idx}" class="table-edit-box">${mOpts}</select>
                             </div>
-
-                            <div class="date-time-card-box">
-                                <label style="margin-top:0;">次回選考予定</label>
-                                <select id="mob_nextDateType_${idx}">
-                                    <option value="" ${comp.nextDateType===''?'selected':''}>(なし)</option>
-                                    <option value="説明会" ${comp.nextDateType==='説明会'?'selected':''}>説明会</option>
-                                    <option value="GD" ${comp.nextDateType==='GD'?'selected':''}>GD</option>
-                                    <option value="テスト" ${comp.nextDateType==='テスト'?'selected':''}>テスト</option>
-                                    <option value="一次面接" ${comp.nextDateType==='一次面接'?'selected':''}>一次面接</option>
-                                    <option value="二次面接" ${comp.nextDateType==='二次面接'?'selected':''}>二次面接</option>
-                                    <option value="最終面接" ${comp.nextDateType==='最終面接'?'selected':''}>最終面接</option>
-                                    <option value="インターン" ${comp.nextDateType==='インターン'?'selected':''}>インターン</option>
-                                    <option value="その他" ${comp.nextDateType==='その他'?'selected':''}>その他</option>
-                                </select>
-                                <input type="date" id="mob_intDate_${idx}" value="${intObj.date}" style="margin-top:4px;">
-                                <label style="font-weight:normal; display:flex; align-items:center; gap:6px; margin-top:4px;"><input type="checkbox" id="mob_intHasTime_${idx}" ${intObj.hasTime?'checked':''} onchange="document.getElementById('mob_intTimeBox_${idx}').style.display=this.checked?'flex':'none'" style="width:auto !important; margin:0;"> 時間指定</label>
-                                <div id="mob_intTimeBox_${idx}" class="time-box-flex" style="display:${intObj.hasTime?'flex':'none'};">
-                                    <select id="mob_intHour_${idx}">${hOpts}</select>時<select id="mob_intMin_${idx}">${mOpts}</select>分
-                                </div>
+                        </td>
+                        
+                        <td>
+                            <select id="inline_nextDateType_${idx}" class="table-edit-box" style="margin-bottom:2px;">
+                                <option value="" ${comp.nextDateType===''?'selected':''}>(なし)</option>
+                                <option value="説明会" ${comp.nextDateType==='説明会'?'selected':''}>説明会</option>
+                                <option value="GD" ${comp.nextDateType==='GD'?'selected':''}>GD</option>
+                                <option value="テスト" ${comp.nextDateType==='テスト'?'selected':''}>テスト</option>
+                                <option value="一次面接" ${comp.nextDateType==='一次面接'?'selected':''}>一次面接</option>
+                                <option value="二次面接" ${comp.nextDateType==='二次面接'?'selected':''}>二次面接</option>
+                                <option value="最終面接" ${comp.nextDateType==='最終面接'?'selected':''}>最終面接</option>
+                                <option value="インターン" ${comp.nextDateType==='インターン'?'selected':''}>インターン</option>
+                                <option value="その他" ${comp.nextDateType==='その他'?'selected':''}>その他</option>
+                            </select>
+                            <input type="date" id="inline_intDate_${idx}" class="table-edit-box" value="${intObj.date}">
+                            <label style="font-weight:normal; font-size:0.7rem; display:flex; align-items:center; gap:4px; margin-top:2px;"><input type="checkbox" id="inline_intHasTime_${idx}" ${intObj.hasTime?'checked':''} onchange="document.getElementById('inline_intTimeBox_${idx}').style.display=this.checked?'flex':'none'" style="width:auto;">時間指定</label>
+                            <div id="inline_intTimeBox_${idx}" class="time-box-flex" style="display:${intObj.hasTime?'flex':'none'};">
+                                <select id="inline_intHour_${idx}" class="table-edit-box">${hOpts}</select>:<select id="inline_intMin_${idx}" class="table-edit-box">${mOpts}</select>
                             </div>
-
-                            <div style="grid-column: span 2;">
-                                <label>ステータス</label>
-                                <select id="mob_status_${idx}">
-                                    <option value="未エントリー" ${comp.status==='未エントリー'?'selected':''}>未エントリー</option>
-                                    <option value="説明会" ${comp.status==='説明会'?'selected':''}>説明会</option>
-                                    <option value="ES作成中" ${comp.status==='ES作成中'?'selected':''}>ES作成中</option>
-                                    <option value="ES提出済み" ${comp.status==='ES提出済み'?'selected':''}>ES提出済み</option>
-                                    <option value="テスト" ${comp.status==='テスト'?'selected':''}>テスト</option>
-                                    <option value="GD" ${comp.status==='GD'?'selected':''}>GD</option>
-                                    <option value="一次面接" ${comp.status==='一次面接'?'selected':''}>一次面接</option>
-                                    <option value="二次面接" ${comp.status==='二次面接'?'selected':''}>二次面接</option>
-                                    <option value="最終面接" ${comp.status==='最終面接'?'selected':''}>最終面接</option>
-                                    <option value="インターン" ${comp.status==='インターン'?'selected':''}>インターン</option>
-                                    <option value="結果待ち" ${comp.status==='結果待ち'?'selected':''}>結果待ち</option>
-                                    <option value="内定" ${comp.status==='内定'?'selected':''}>内定</option>
-                                    <option value="不合格" ${comp.status==='不合格'?'selected':''}>不合格</option>
-                                    <option value="その他" ${comp.status==='その他'?'selected':''}>その他</option>
-                                </select>
+                        </td>
+                        
+                        <td>
+                            <select id="inline_status_${idx}" class="table-edit-box">
+                                <option value="未エントリー" ${comp.status==='未エントリー'?'selected':''}>未エントリー</option>
+                                <option value="説明会" ${comp.status==='説明会'?'selected':''}>説明会</option>
+                                <option value="ES作成中" ${comp.status==='ES作成中'?'selected':''}>ES作成中</option>
+                                <option value="ES提出済み" ${comp.status==='ES提出済み'?'selected':''}>ES提出済み</option>
+                                <option value="テスト" ${comp.status==='テスト'?'selected':''}>テスト</option>
+                                <option value="GD" ${comp.status==='GD'?'selected':''}>GD</option>
+                                <option value="一次面接" ${comp.status==='一次面接'?'selected':''}>一次面接</option>
+                                <option value="二次面接" ${comp.status==='二次面接'?'selected':''}>二次面接</option>
+                                <option value="最終面接" ${comp.status==='最終面接'?'selected':''}>最終面接</option>
+                                <option value="インターン" ${comp.status==='インターン'?'selected':''}>インターン</option>
+                                <option value="結果待ち" ${comp.status==='結果待ち'?'selected':''}>結果待ち</option>
+                                <option value="内定" ${comp.status==='内定'?'selected':''}>内定</option>
+                                <option value="不合格" ${comp.status==='不合格'?'selected':''}>不合格</option>
+                                <option value="その他" ${comp.status==='その他'?'selected':''}>その他</option>
+                            </select>
+                            <textarea id="inline_memo_${idx}" class="table-edit-box" rows="1" style="margin-top:4px; height:24px; font-size:0.75rem !important;" placeholder="メモ">${escapeHtml(comp.memo || '')}</textarea>
+                        </td>
+                        <td>
+                            <div style="display:flex; flex-direction:column; gap:4px;">
+                                <button class="action-btn" style="background:var(--primary-pink); color:white; border:none;" onclick="saveInlineEdit(${idx})">保存</button>
+                                <button class="action-btn" onclick="cancelInlineEdit()">戻る</button>
                             </div>
-                            <div style="grid-column: span 2;"><label>メモ</label><textarea id="mob_memo_${idx}" rows="2" style="height:38px;">${escapeHtml(comp.memo || '')}</textarea></div>
-                            
-                            <div class="mobile-edit-full">
-                                <button class="action-btn" style="background:var(--primary-pink); color:white; border:none; padding: 6px 14px;" onclick="saveMobileEdit(${idx})">保存する ✨</button>
-                                <button class="action-btn" style="padding: 6px 14px;" onclick="cancelInlineEdit()">戻る</button>
-                            </div>
-                        </div>
+                        </td>
                     `;
-                    if(esObj.hasTime){ document.getElementById(`mob_esHour_${idx}`).value = esObj.hour; document.getElementById(`mob_esMin_${idx}`).value = esObj.min; }
-                    if(intObj.hasTime){ document.getElementById(`mob_intHour_${idx}`).value = intObj.hour; document.getElementById(`mob_intMin_${idx}`).value = intObj.min; }
+                    if(esObj.hasTime){ document.getElementById(`inline_esHour_${idx}`).value = esObj.hour; document.getElementById(`inline_esMin_${idx}`).value = esObj.min; }
+                    if(intObj.hasTime){ document.getElementById(`inline_intHour_${idx}`).value = intObj.hour; document.getElementById(`inline_intMin_${idx}`).value = intObj.min; }
                 } else {
-                    // 👀 通常表示アコーディオンモード
-                    cardDiv.innerHTML = `
-                        <div class="mobile-card-header ${bgClass}" onclick="toggleMobileCard(${idx})">
-                            <div class="mobile-card-header-left">
-                                <span class="mobile-card-title">${escapeHtml(comp.name)}</span>
-                                <span class="status-badge" style="background: white; flex-shrink:0;">${escapeHtml(comp.status)}</span>
+                    // 👀 通常表示テーブル行モード
+                    tr.innerHTML = `
+                        <td style="font-weight: bold;">
+                            ${comp.hp ? `<a href="${comp.hp}" target="_blank" style="color:#ff6b8b; text-decoration: underline;">${escapeHtml(comp.name)} ↗</a>` : escapeHtml(comp.name)}
+                        </td>
+                        <td>
+                            ${comp.mypageUrl ? `<a href="${comp.mypageUrl}" target="_blank" style="color:#4dadf7; font-weight:bold;">🔑 開く ↗</a>` : '<span style="color:#ccc;">-</span>'}
+                        </td>
+                        <td><code>${escapeHtml(comp.mypageId) || '-'}</code></td>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                                <span>${comp.esDeadline ? formatDisplayDate(comp.esDeadline) : '-'}</span>
+                                <label style="display:inline-flex; align-items:center; gap:3px; cursor:pointer; font-size:0.75rem; background:white; padding:2px 4px; border-radius:4px; border:1px solid var(--border-soft);">
+                                    <input type="checkbox" ${comp.esDone ? 'checked' : ''} onchange="toggleEsDone(${idx}, this.checked)" style="width:auto; margin:0;"> 
+                                    <span style="color: ${comp.esDone ? '#40c057':'#ff85a2'}; font-weight:bold;">${comp.esDone ? '済':'未'}</span>
+                                </label>
                             </div>
-                            <span id="arrow-${idx}" class="mobile-arrow ${isCurrentlyOpen ? 'open' : ''}">▼</span>
-                        </div>
-                        <div id="body-${idx}" class="mobile-card-body" style="display: ${isCurrentlyOpen ? 'block' : 'none'};">
-                            <div class="mobile-info-row">
-                                <div class="mobile-info-label">企業名</div>
-                                <div class="mobile-info-value" style="font-weight: bold; font-size:1.1rem;">
-                                    ${comp.hp ? `<a href="${comp.hp}" target="_blank" style="color:#ff6b8b; text-decoration: underline;">${escapeHtml(comp.name)} ↗</a>` : escapeHtml(comp.name)}
-                                </div>
-                            </div>
-                            <div class="mobile-info-row">
-                                <div class="mobile-info-label">マイページ</div>
-                                <div class="mobile-info-value">
-                                    ${comp.mypageUrl ? `<a href="${comp.mypageUrl}" target="_blank" style="color:#4dadf7; font-weight:bold;">🔑 マイページを開く ↗</a>` : '<span style="color:#ccc;">URL未設定</span>'}
-                                </div>
-                            </div>
-                            <div class="mobile-info-row">
-                                <div class="mobile-info-label">マイページID</div>
-                                <div class="mobile-info-value"><code>${escapeHtml(comp.mypageId) || '-'}</code></div>
-                            </div>
-                            <div class="mobile-info-row">
-                                <div class="mobile-info-label">ES提出締切日 / 提出状況</div>
-                                <div class="mobile-info-value" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:4px;">
-                                    <span style="font-weight:bold;">${comp.esDeadline ? formatDisplayDate(comp.esDeadline) : '未設定'}</span>
-                                    <label style="display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:0.8rem; background:white; padding:4px 8px; border-radius:6px; border:1px solid var(--border-soft);">
-                                        <input type="checkbox" ${comp.esDone ? 'checked' : ''} onchange="toggleEsDone(${idx}, this.checked)" onclick="event.stopPropagation();" style="width:auto !important; margin:0;"> 
-                                        <span style="font-weight:bold; color: ${comp.esDone ? '#40c057':'#ff85a2'};">${comp.esDone ? '✅ 提出済み':'⬜ 未提出'}</span>
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="mobile-info-row">
-                                <div class="mobile-info-label">次回の選考予定日時</div>
-                                <div class="mobile-info-value">
-                                    ${comp.interviewDate ? `<span style="background:#fffdbd; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:0.75rem; color:#b78a00; margin-right:6px;">${escapeHtml(comp.nextDateType || '予定')}</span> <strong>${formatDisplayDate(comp.interviewDate)}</strong>` : '-'}
-                                </div>
-                            </div>
-                            <div class="mobile-info-row">
-                                <div class="mobile-info-label">メモ</div>
-                                <div class="mobile-info-value" style="white-space:pre-wrap; background:#fff; padding:8px; border-radius:8px; border:1px solid #f3ebeb;">${escapeHtml(comp.memo) || '-'}</div>
-                            </div>
-                            <div style="text-align: right; margin-top: 15px; display:flex; gap:8px; justify-content:flex-end;">
-                                <button class="action-btn" onclick="startInlineEdit(${idx})">編集 📝</button>
-                                <button class="action-btn" style="color:#fa5252;" onclick="deleteCompany(${idx})">削除</button>
-                            </div>
-                        </div>
+                        </td>
+                        <td>
+                            ${comp.interviewDate ? `<span style="background:#fffdbd; padding:1px 4px; border-radius:4px; font-weight:bold; font-size:0.7rem; color:#b78a00; margin-right:4px;">${escapeHtml(comp.nextDateType || '予定')}</span>${formatDisplayDate(comp.interviewDate)}` : '-'}
+                        </td>
+                        <td>
+                            <span style="font-weight:bold;">${escapeHtml(comp.status)}</span>
+                            ${comp.memo ? `<div style="font-size:0.7rem; color:#868e96; white-space:pre-wrap; background:rgba(255,255,255,0.6); padding:2px 4px; border-radius:4px; margin-top:2px; max-width:140px; word-break:break-all;">${escapeHtml(comp.memo)}</div>` : ''}
+                        </td>
+                        <td>
+                            <button class="action-btn" onclick="startInlineEdit(${idx})">編集</button>
+                            <button class="action-btn" style="color:#fa5252;" onclick="deleteCompany(${idx})">削除</button>
+                        </td>
                     `;
                 }
-                targetContainer.appendChild(cardDiv);
+                tbody.appendChild(tr);
             });
         }
-
-        // アコーディオンの開閉切り替え
-        window.toggleMobileCard = function(index) {
-            const body = document.getElementById(`body-${index}`);
-            const arrow = document.getElementById(`arrow-${index}`);
-            if (!body || !arrow) return;
-            
-            if (body.style.display === 'block') {
-                body.style.display = 'none';
-                arrow.classList.remove('open');
-                if (openCardIndex === index) openCardIndex = null;
-            } else {
-                // 他をすべて閉じて、これだけを開く
-                document.querySelectorAll('.mobile-card-body').forEach(b => b.style.display = 'none');
-                document.querySelectorAll('.mobile-arrow').forEach(a => a.classList.remove('open'));
-                body.style.display = 'block';
-                arrow.classList.add('open');
-                openCardIndex = index;
-            }
-        };
 
         function startInlineEdit(index) { editingIndex = index; renderTable(); }
         function cancelInlineEdit() { editingIndex = null; renderTable(); }
 
-        window.saveMobileEdit = function(index) {
-            const newName = document.getElementById(`mob_name_${index}`).value.trim();
+        window.saveInlineEdit = function(index) {
+            const newName = document.getElementById(`inline_name_${index}`).value.trim();
             if (!newName) { alert("企業名は入れてね！"); return; }
-            const isEsDone = document.getElementById(`mob_esDone_${index}`).checked;
-            let statusVal = document.getElementById(`mob_status_${index}`).value;
+            const isEsDone = document.getElementById(`inline_esDone_${index}`).checked;
+            let statusVal = document.getElementById(`inline_status_${index}`).value;
             
             if (isEsDone && statusVal === 'ES作成中') statusVal = 'ES提出済み';
             else if (!isEsDone && statusVal === 'ES提出済み') statusVal = 'ES作成中';
 
-            const esDateVal = document.getElementById(`mob_esDate_${index}`).value;
+            const esDateVal = document.getElementById(`inline_esDate_${index}`).value;
             let finalEsStr = "";
             if(esDateVal){
-                const hasTime = document.getElementById(`mob_esHasTime_${index}`).checked;
-                finalEsStr = hasTime ? `${esDateVal} ${document.getElementById(`mob_esHour_${index}`).value}:${document.getElementById(`mob_esMin_${index}`).value}` : esDateVal;
+                const hasTime = document.getElementById(`inline_esHasTime_${index}`).checked;
+                finalEsStr = hasTime ? `${esDateVal} ${document.getElementById(`inline_esHour_${index}`).value}:${document.getElementById(`inline_esMin_${index}`).value}` : esDateVal;
             }
-            const intDateVal = document.getElementById(`mob_intDate_${index}`).value;
+            const intDateVal = document.getElementById(`inline_intDate_${index}`).value;
             let finalIntStr = "";
             if(intDateVal){
-                const hasTime = document.getElementById(`mob_intHasTime_${index}`).checked;
-                finalIntStr = hasTime ? `${intDateVal} ${document.getElementById(`mob_intHour_${index}`).value}:${document.getElementById(`mob_intMin_${index}`).value}` : intDateVal;
+                const hasTime = document.getElementById(`inline_intHasTime_${index}`).checked;
+                finalIntStr = hasTime ? `${intDateVal} ${document.getElementById(`inline_intHour_${index}`).value}:${document.getElementById(`inline_intMin_${index}`).value}` : intDateVal;
             }
 
             companies[index] = {
                 name: newName,
-                hp: document.getElementById(`mob_hp_${index}`).value.trim(),
-                mypageUrl: document.getElementById(`mob_mypageUrl_${index}`).value.trim(),
-                mypageId: document.getElementById(`mob_mypageId_${index}`).value.trim(),
+                hp: document.getElementById(`inline_mypageUrl_${index}`).previousElementSibling ? "" : companies[index].hp, 
+                mypageUrl: document.getElementById(`inline_mypageUrl_${index}`).value.trim(),
+                mypageId: document.getElementById(`inline_mypageId_${index}`).value.trim(),
                 esDeadline: finalEsStr,
                 esDone: isEsDone,
-                nextDateType: document.getElementById(`mob_nextDateType_${index}`).value,
+                nextDateType: document.getElementById(`inline_nextDateType_${index}`).value,
                 interviewDate: finalIntStr,
                 status: statusVal,
-                memo: document.getElementById(`mob_memo_${index}`).value.trim(),
+                memo: document.getElementById(`inline_memo_${index}`).value.trim(),
                 esTaskCompleted: companies[index].esTaskCompleted || false,
                 interviewTaskCompleted: companies[index].interviewTaskCompleted || false
             };
             
             editingIndex = null;
-            if (window.currentUid) {
-                db.collection("users").doc(window.currentUid).set({
-                    companies: window.companies,
-                    userName: window.userName
-                }, { merge: true }).then(() => { renderApp(); });
-            } else {
-                renderApp();
-            }
+            saveToFirebase(window.currentUid);
         };
 
         function toggleEsDone(index, isChecked) {
@@ -958,7 +911,6 @@
         function deleteCompany(index) {
             if (confirm(`この企業データを消しちゃっても大丈夫？`)) {
                 if (editingIndex === index) editingIndex = null;
-                if (openCardIndex === index) openCardIndex = null;
                 companies.splice(index, 1);
                 saveToFirebase(window.currentUid);
             }
