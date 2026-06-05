@@ -290,7 +290,7 @@
 
         <div class="flexible-layout-wrapper">
             
-            <!-- 上段セクション (スマホ時はカレンダー側が隠れ、今週やることカードが1位の配置になります) -->
+            <!-- 上段セクション -->
             <div class="section-top-row">
                 <div class="pc-top-grid">
                     <!-- タスク一覧 -->
@@ -346,7 +346,7 @@
                     </table>
                 </div>
 
-                <!-- 📱 スマホ用：企業名のみのすっきりアコーディオンリスト -->
+                <!-- 📱 スマホ用 -->
                 <div id="mobileCompanyList" class="mobile-company-list-wrapper"></div>
             </div>
 
@@ -436,7 +436,6 @@
         let currentTaskPage = 1;
         const tasksPerPage = 5;
 
-        // スマホでどのアコーディオンが開いているかを管理する用のセット
         let mobileOpenedIndices = new Set();
 
         function initTimeSelectsForElement(hEl, mEl) {
@@ -596,7 +595,6 @@
             return { date: p[0].replace(/-/g, "/"), time: p[1] || "" };
         }
 
-        // スマホ用アコーディオンの開閉を記憶・切り替え
         window.toggleMobileAccordion = function(idx) {
             const cardEl = document.getElementById(`m-card-${idx}`);
             if(!cardEl) return;
@@ -634,7 +632,7 @@
             filteredCompanies.forEach(({ comp, idx }) => {
                 
                 // ==========================================
-                // 💻 パソコン用：従来のテーブル行生成
+                // 💻 パソコン用テーブル行
                 // ==========================================
                 const tr = document.createElement('tr');
                 tr.className = 'status-row-white';
@@ -797,7 +795,7 @@
 
 
                 // ==========================================
-                // 📱 スマホ用：アコーディオンカード型生成
+                // 📱 スマホ用アコーディオンカード型
                 // ==========================================
                 const mCard = document.createElement('div');
                 mCard.id = `m-card-${idx}`;
@@ -805,7 +803,6 @@
                 if(mobileOpenedIndices.has(idx) || editingIndex === idx) mCard.classList.add('open');
 
                 if (editingIndex === idx) {
-                    // スマホ上で展開中、かつ「編集モード」のときのフォーム
                     const esObj = parseDateTimeString(comp.esDeadline);
                     const intObj = parseDateTimeString(comp.interviewDate);
                     
@@ -815,7 +812,7 @@
 
                     mCard.innerHTML = `
                         <div class="m-comp-header" style="background:#fff0f2;">
-                            <span>📝 ${escapeHtml(comp.name)} を編集割中</span>
+                            <span>📝 ${escapeHtml(comp.name)} を編集中</span>
                         </div>
                         <div class="m-comp-body" style="display:block; background:#fff;">
                             <div class="m-detail-row"><label>企業名 *</label><input type="text" id="mob_name_${idx}" value="${escapeHtml(comp.name)}"></div>
@@ -897,7 +894,6 @@
                     }, 0);
 
                 } else {
-                    // 通常時：タップすると詳細が開くアコーディオン
                     let esText = "-";
                     if(comp.esDeadline) {
                         const esData = splitDeadlineString(comp.esDeadline);
@@ -909,14 +905,15 @@
                         nextText = comp.nextDateType ? `【${comp.nextDateType}】${intData.date} ${intData.time}` : `${intData.date} ${intData.time}`;
                     }
 
+                    // 🔗の絵文字を除去
                     mCard.innerHTML = `
                         <div class="m-comp-header" onclick="toggleMobileAccordion(${idx})">
                             <span>🏢 ${escapeHtml(comp.name)}</span>
                             <span class="m-comp-arrow">▼</span>
                         </div>
                         <div class="m-comp-body">
-                            ${comp.hp ? `<div class="m-detail-row"><span class="m-detail-label">公式HP</span><span class="m-detail-value"><a href="${comp.hp}" target="_blank">HPを開く 🔗</a></span></div>` : ''}
-                            <div class="m-detail-row"><span class="m-detail-label">マイページ / ID</span><span class="m-detail-value">${comp.mypageUrl ? `<a href="${comp.mypageUrl}" target="_blank">ログイン 🔗</a>` : '-'}${comp.mypageId ? ` <br><span style="font-size:0.75rem; color:#666;">ID: ${escapeHtml(comp.mypageId)}</span>` : ''}</span></div>
+                            ${comp.hp ? `<div class="m-detail-row"><span class="m-detail-label">公式HP</span><span class="m-detail-value"><a href="${comp.hp}" target="_blank">HPを開く</a></span></div>` : ''}
+                            <div class="m-detail-row"><span class="m-detail-label">マイページ / ID</span><span class="m-detail-value">${comp.mypageUrl ? `<a href="${comp.mypageUrl}" target="_blank">ログイン</a>` : '-'}${comp.mypageId ? ` <br><span style="font-size:0.75rem; color:#666;">ID: ${escapeHtml(comp.mypageId)}</span>` : ''}</span></div>
                             <div class="m-detail-row"><span class="m-detail-label">ES提出期限</span><span class="m-detail-value" style="font-weight:bold;">${esText}</span></div>
                             <div class="m-detail-row"><span class="m-detail-label">次回選考日程</span><span class="m-detail-value" style="font-weight:bold; color:#ff6b8b;">${nextText}</span></div>
                             <div class="m-detail-row"><span class="m-detail-label">選考ステータス</span><span class="m-detail-value" style="font-weight:bold;">${escapeHtml(comp.status)}</span></div>
@@ -936,7 +933,6 @@
         function startInlineEdit(index) { editingIndex = index; renderTable(); }
         function cancelInlineEdit() { editingIndex = null; renderTable(); }
 
-        // PC側インライン保存処理
         window.saveInlineEdit = function(index) {
             const newName = document.getElementById(`inline_name_${index}`).value.trim();
             if (!newName) { alert("企業名は入れてね！"); return; }
@@ -978,7 +974,6 @@
             saveToFirebase(window.currentUid);
         };
 
-        // 📱 スマホ専用：開いたその場で編集して保存する処理
         window.saveMobileEdit = function(index) {
             const newName = document.getElementById(`mob_name_${index}`).value.trim();
             if (!newName) { alert("企業名は入れてね！"); return; }
@@ -1142,7 +1137,7 @@
             if (targetPopup && !alreadyOpen) { targetPopup.style.display = 'block'; }
         };
         
-        document.addEventListener('click', () => { document.querySelectorAll('.calendar-popup').forEach(p => p.style.display = 'none'); });
+            document.addEventListener('click', () => { document.querySelectorAll('.calendar-popup').forEach(p => p.style.display = 'none'); });
 
         function getDotColor(status) {
             switch(status) {
