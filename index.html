@@ -5,28 +5,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>就活スケジュール管理アプリ</title>
     
-    <!-- Firebase SDK (v8形式で統一) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-    <!-- Google Fonts (丸みのある可愛いフォント) -->
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --primary-pink: #ffb7c5; /* メインの可愛い桜ピンク */
-            --bg-pastel: #fff5f6;     /* 背景のほんのりピンク */
-            --border-soft: #fecdd3;   /* 優しい境界線 */
-            --text-dark: #5c4d50;     /* 柔らかいブラウン系の文字色 */
+            --primary-pink: #ffb7c5;
+            --bg-pastel: #fff5f6;
+            --border-soft: #fecdd3;
+            --text-dark: #5c4d50;
             
             /* パステルステータスカラー */
             --status-white: #ffffff;
-            --status-pink: #ffe3e8;   /* ES作成・提出 */
-            --status-yellow: #fff9db; /* テスト・面接系 */
-            --status-green: #e6fcf5;  /* インターン・結果待ち */
-            --status-purple: #f3f0ff; /* 内定 */
-            --status-gray: #f1f3f5;   /* 不合格 */
+            --status-pink: #ffe3e8;
+            --status-yellow: #fff9db;
+            --status-green: #e6fcf5;
+            --status-purple: #f3f0ff;
+            --status-gray: #f1f3f5;
         }
         
         body {
@@ -43,7 +41,6 @@
             margin: 0 auto;
         }
         
-        /* ぷっくり可愛いカードデザイン */
         .card {
             background: white;
             border-radius: 20px;
@@ -53,7 +50,6 @@
             border: 2px solid var(--border-soft);
         }
         
-        /* ヘッダー周り */
         .header-area {
             display: flex;
             justify-content: space-between;
@@ -84,11 +80,22 @@
         
         .auth-right {
             display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+        .auth-top-row {
+            display: flex;
             align-items: center;
             gap: 12px;
         }
+        .user-email-display {
+            font-size: 0.75rem;
+            color: #a08a8e;
+            font-weight: bold;
+            padding-right: 6px;
+        }
         
-        /* パステルカラーのボタン */
         .btn-cute {
             background-color: var(--primary-pink);
             color: white;
@@ -117,17 +124,20 @@
             border: 1px solid #dee2e6;
         }
         
-        /* もきゅもきゅ一言メッセージ */
+        /* 改行なし・一行表示の一言メッセージ */
         .greeting-box {
             background: linear-gradient(135deg, #fff0f3 0%, #ffe3e8 100%);
             border: 2px dotted #ff85a2;
             padding: 14px;
             text-align: center;
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             font-weight: bold;
             border-radius: 16px;
             margin-bottom: 15px;
             color: #de5c78;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
             animation: fuwafuwa 3s infinite ease-in-out;
         }
         @keyframes fuwafuwa {
@@ -135,16 +145,14 @@
             50% { transform: translateY(-4px); }
         }
         
-        /* 2カラム配置（タスク＆カレンダー） */
         .flex-row-box {
             display: flex;
             gap: 20px;
             flex-wrap: wrap;
         }
-        .task-half { flex: 1.2; min-width: 300px; }
+        .task-half { flex: 1.2; min-width: 300px; display: flex; flex-direction: column; justify-content: space-between; }
         .cal-half { flex: 0.8; min-width: 280px; }
         
-        /* カレンダー調整 */
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 8px; }
         .calendar-header-cell { text-align: center; font-weight: bold; padding: 4px; background: #ffe3e8; font-size: 0.75rem; border-radius: 6px; color: #ff6b8b;}
         .calendar-cell { background: #fff; border: 1px solid var(--border-soft); min-height: 42px; padding: 2px; position: relative; border-radius: 6px; }
@@ -160,12 +168,35 @@
             z-index: 1000; display: none; font-size: 0.75rem; min-width: 140px;
         }
         
-        /* タスクリスト */
+        /* タスクリスト（クリック可能） */
         .todo-list { list-style: none; padding: 0; margin: 0; }
-        .todo-item { padding: 10px 14px; margin-bottom: 8px; border-left: 6px solid #ccc; border-radius: 8px; font-size: 0.85rem; background: #fefefe; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .todo-item {
+            padding: 10px 14px; margin-bottom: 8px; border-left: 6px solid #ccc;
+            border-radius: 8px; font-size: 0.85rem; background: #fefefe;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02); cursor: pointer;
+            transition: background 0.2s; position: relative;
+        }
+        .todo-item:hover { background: #fff0f2; }
         .todo-empty { color: #868e96; font-size: 0.85rem; font-style: italic; text-align: center; padding: 20px 0; }
         
-        /* 入力フォーム */
+        /* タスク内の簡易アクションメニュー */
+        .task-action-overlay {
+            display: none; gap: 8px; margin-top: 6px; background: #fff5f6;
+            padding: 6px; border-radius: 8px; border: 1px dashed var(--primary-pink);
+        }
+        .btn-task-action {
+            padding: 2px 10px; font-size: 0.75rem; border-radius: 12px;
+            cursor: pointer; font-weight: bold; border: none;
+        }
+        .btn-task-done { background: #40c057; color: white; }
+        .btn-task-yet { background: #adb5bd; color: white; }
+
+        /* ページネーション用の可愛いコントロール */
+        .pagination-container {
+            display: flex; justify-content: center; align-items: center;
+            gap: 15px; margin-top: 10px; font-size: 0.8rem; font-weight: bold;
+        }
+        
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
         label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 0.85rem; color: #7c6a6e; }
         input[type="text"], input[type="date"], input[type="url"], select, textarea {
@@ -175,7 +206,6 @@
         }
         input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary-pink); background-color: #fff; }
         
-        /* ステータス別の行カラー（ご指定パステル） */
         .status-row-white { background-color: var(--status-white); }
         .status-row-pink { background-color: var(--status-pink); }
         .status-row-yellow { background-color: var(--status-yellow); }
@@ -183,7 +213,6 @@
         .status-row-purple { background-color: var(--status-purple); }
         .status-row-gray { background-color: var(--status-gray); color: #868e96; }
         
-        /* テーブル */
         .table-responsive { overflow-x: auto; border-radius: 16px; border: 2px solid var(--border-soft); }
         table { width: 100%; border-collapse: collapse; font-size: 0.85rem; background: white; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border-soft); }
@@ -203,28 +232,33 @@
 
     <div class="container">
         
-        <!-- 一番上：タイトル ＆ 同期・ログイン情報 -->
         <div class="header-area">
             <div id="appTitleDisplay" class="title-editable" onclick="changeAppTitle()">読み込み中...</div>
             <div class="auth-right">
-                <span id="syncStatus" class="status-badge">状態確認中...</span>
-                <button id="btnGoogleLogin" class="btn-cute btn-login" onclick="loginWithGoogle()" style="display: none;">Googleでログイン</button>
-                <button id="btnGoogleLogout" class="btn-cute btn-logout" onclick="logout()" style="display: none;">ログアウト</button>
+                <div class="auth-top-row">
+                    <span id="syncStatus" class="status-badge">状態確認中...</span>
+                    <button id="btnGoogleLogin" class="btn-cute btn-login" onclick="loginWithGoogle()" style="display: none;">Googleでログイン</button>
+                    <button id="btnGoogleLogout" class="btn-cute btn-logout" onclick="logout()" style="display: none;">ログアウト</button>
+                </div>
+                <div id="userEmailDisplay" class="user-email-display"></div>
             </div>
         </div>
 
-        <!-- 真ん中：今週のタスク ＆ 右側に小さめカレンダー -->
         <div class="flex-row-box">
             
-            <!-- 左：今週やるべきこと -->
             <div class="card task-half">
-                <h3 style="margin-top:0; color:#ff6b8b; font-size:1.1rem;">📅 今週やるべきこと (直近7日以内)</h3>
-                <ul id="todoList" class="todo-list"></ul>
+                <div>
+                    <h3 style="margin-top:0; color:#ff6b8b; font-size:1.1rem; margin-bottom: 12px;">📅 今週やるべきこと (直近7日以内)</h3>
+                    <ul id="todoList" class="todo-list"></ul>
+                </div>
+                <div id="taskPagination" class="pagination-container" style="display: none;">
+                    <button onclick="changeTaskPage(-1)" class="action-btn" style="padding:2px 8px;">◀ 前</button>
+                    <span id="taskPageNum">1 / 1</span>
+                    <button onclick="changeTaskPage(1)" class="action-btn" style="padding:2px 8px;">次 ▶</button>
+                </div>
             </div>
             
-            <!-- 右：カレンダー（上部に時間帯一言メッセージ付き） -->
             <div class="card cal-half">
-                <!-- ご指定の時間帯一言メッセージ -->
                 <div id="greetingMessage" class="greeting-box">こんにちは✨</div>
                 
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 5px;">
@@ -241,7 +275,6 @@
             </div>
         </div>
 
-        <!-- その下：企業の追加欄 -->
         <div class="card">
             <h3 style="margin-top:0; color:#ff6b8b; font-size:1.1rem;">🏢 エントリー企業の追加</h3>
             <form id="companyForm">
@@ -292,7 +325,6 @@
             </form>
         </div>
 
-        <!-- 一番下：企業名（一覧テーブル） -->
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
                 <h3 style="margin:0; color:#ff6b8b; font-size:1.1rem;">📊 登録企業一覧</h3>
@@ -331,13 +363,17 @@
         const db = firebase.firestore();
 
         window.companies = [];
-        window.userName = "ユーザー"; // デフォルト
+        window.userName = "ユーザー";
         window.currentUid = null;
         let editingIndex = null;
         let currentCalendarDate = new Date();
         let unsubscribeRealtime = null;
 
-        // セレクトボックスの初期化
+        // タスクリスト用ページネーション変数
+        let currentTaskPage = 1;
+        const tasksPerPage = 6;
+
+        // セレクトボックス初期化
         (function initTimeSelects() {
             const hSelects = ['esHour', 'interviewHour'];
             const mSelects = ['esMin', 'interviewMin'];
@@ -351,13 +387,13 @@
             });
         })();
 
-        // ご指定の一言メッセージを判定する関数
+        // ご指定の一言メッセージ（一行固定）
         function updateGreetingMessage() {
             const now = new Date();
             const hour = now.getHours();
             const min = now.getMinutes();
             const timeVal = hour + min / 60;
-            let msg = "やっほ〜！今日も楽しもうね😳💡";
+            let msg = "やっほ〜！今日はなにするの😳💡";
 
             if (timeVal >= 5.0 && timeVal <= 10.0) {
                 msg = "おはよん！今日も１日がんばろう😽✨";
@@ -370,9 +406,8 @@
             }
             document.getElementById('greetingMessage').textContent = msg;
         }
-        setInterval(updateGreetingMessage, 60000); // 1分ごとに更新
+        setInterval(updateGreetingMessage, 60000);
 
-        // アプリタイトル（〇〇の就活）の変更
         function changeAppTitle() {
             const newName = prompt("あなたのお名前を入力してね！", window.userName);
             if (newName !== null) {
@@ -390,7 +425,7 @@
             const provider = new firebase.auth.GoogleAuthProvider();
             try {
                 await auth.signInWithPopup(provider);
-                updateSyncStatus("同期中 🌸", "#ff6b8b");
+                updateSyncStatus("同期中... ⏳", "#ffd43b");
             } catch (error) {
                 console.error(error);
                 alert("ログインに失敗しちゃった: " + error.message);
@@ -426,7 +461,7 @@
                 }
                 document.getElementById('appTitleDisplay').textContent = `${window.userName}の就活`;
                 renderApp();
-                updateSyncStatus("同期済み 💕", "#2b8a3e");
+                updateSyncStatus("同期済み ✨", "#2b8a3e"); // 💕から✨に変更
                 showLoading(false);
             }, (error) => {
                 updateSyncStatus("同期エラー 😿", "#fa5252");
@@ -436,7 +471,6 @@
 
         async function saveToFirebase(uid) {
             if (!uid) {
-                // 未ログイン時は画面描画のみ更新
                 renderApp();
                 return;
             }
@@ -453,8 +487,10 @@
 
         auth.onAuthStateChanged((user) => {
             updateGreetingMessage();
+            const emailEl = document.getElementById('userEmailDisplay');
             if (user) {
                 window.currentUid = user.uid;
+                if (emailEl) emailEl.textContent = user.displayName || user.email || ""; // アカウント名を表示
                 document.getElementById('btnGoogleLogin').style.display = 'none';
                 document.getElementById('btnGoogleLogout').style.display = 'inline-block';
                 startRealtimeSync(user.uid);
@@ -462,6 +498,7 @@
                 window.currentUid = null;
                 window.companies = [];
                 window.userName = "ユーザー";
+                if (emailEl) emailEl.textContent = "";
                 document.getElementById('btnGoogleLogin').style.display = 'inline-block';
                 document.getElementById('btnGoogleLogout').style.display = 'none';
                 document.getElementById('appTitleDisplay').textContent = `${window.userName}の就活`;
@@ -472,7 +509,7 @@
         });
 
         // ===================================================
-        // 描画・デザイン反映
+        // 描画コントロール
         // ===================================================
         function updateSyncStatus(text, color) {
             const el = document.getElementById('syncStatus');
@@ -490,7 +527,6 @@
             renderCalendar();
         }
 
-        // ご指定のステータス別パステルカラークラス判定
         function getStatusColorClass(status) {
             switch(status) {
                 case '未エントリー': case '説明会': case 'その他': return 'status-row-white';
@@ -515,7 +551,7 @@
             const filteredCompanies = indexedCompanies.filter(({ comp }) => comp.name.toLowerCase().includes(keyword));
 
             if (filteredCompanies.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#868e96; padding:20px;">企業がまだ登録されていないか、検索にヒットしなかったよ🔍</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#868e96; padding:20px;">企業がまだ登録されていないよ🔍</td></tr>`;
                 return;
             }
 
@@ -607,7 +643,7 @@
                                 <input type="checkbox" style="transform:scale(1.2);" ${comp.esDone ? 'checked' : ''} onchange="toggleEsDone(${idx}, this.checked)">
                                 <div>
                                     <span>${esDisplay}</span><br>
-                                    ${comp.esDone ? '<span style="color:#2b8a3e; font-weight:bold; font-size:0.75rem;">提出したよ!</span>' : '<span style="color:#ff85a2; font-size:0.75rem;">まだ未提出</span>'}
+                                    ${comp.esDone ? '<span style="color:#2b8a3e; font-weight:bold; font-size:0.75rem;">提出済</span>' : '<span style="color:#ff85a2; font-size:0.75rem;">未提出</span>'}
                                 </div>
                             </div>
                         </td>
@@ -661,7 +697,8 @@
                 nextDateType: document.getElementById(`inline_nextDateType_${index}`).value,
                 interviewDate: finalIntStr,
                 status: statusVal,
-                memo: document.getElementById(`inline_memo_${index}`).value.trim()
+                memo: document.getElementById(`inline_memo_${index}`).value.trim(),
+                taskCompleted: companies[index].taskCompleted || false // 完了状態を引き継ぐ
             };
 
             editingIndex = null;
@@ -675,7 +712,9 @@
             saveToFirebase(window.currentUid);
         }
 
-        // 締め切りが近い順に並び替えて直近7日間のタスクを表示
+        // ===================================================
+        // 完了ロジック ＆ 1ページ最大6件制限のタスクリスト
+        // ===================================================
         function renderTodoList() {
             const todoList = document.getElementById('todoList');
             if (!todoList) return;
@@ -686,50 +725,133 @@
             sevenDaysLater.setDate(now.getDate() + 7);
             sevenDaysLater.setHours(23, 59, 59, 999);
 
-            let tasks = [];
+            let allTasks = [];
 
-            companies.forEach(comp => {
+            companies.forEach((comp, originalIdx) => {
                 if (comp.status === '不合格') return;
 
-                if (comp.esDeadline && !comp.esDone) {
+                // 1. ES締め切りタスク (完了ボタンを押していないものだけ)
+                if (comp.esDeadline && !comp.esDone && !comp.esTaskCompleted) {
                     const cleanStr = comp.esDeadline.includes(" ") ? comp.esDeadline.replace(/-/g, "/") : comp.esDeadline.replace(/-/g, "/") + " 00:00";
                     const esDate = new Date(cleanStr);
                     if (esDate >= now && esDate <= sevenDaysLater) {
-                        tasks.push({
-                            date: esDate, html: `🎀 <strong>【ES提出期限】</strong>${escapeHtml(comp.name)}<br>⏰ 締切: ${comp.esDeadline}`,
+                        allTasks.push({
+                            type: 'ES', companyIndex: originalIdx, date: esDate,
+                            html: `🎀 <strong>【ES提出期限】</strong>${escapeHtml(comp.name)}<br>⏰ 締切: ${comp.esDeadline}`,
                             color: '#ff85a2', bg: '#fff0f3'
                         });
                     }
                 }
-                if (comp.interviewDate) {
+                // 2. 選考日程タスク (完了ボタンを押していないものだけ)
+                if (comp.interviewDate && !comp.interviewTaskCompleted) {
                     const cleanStr = comp.interviewDate.includes(" ") ? comp.interviewDate.replace(/-/g, "/") : comp.interviewDate.replace(/-/g, "/") + " 00:00";
                     const intDate = new Date(cleanStr);
                     if (intDate >= now && intDate <= sevenDaysLater) {
                         const typeStr = comp.nextDateType ? comp.nextDateType : '予定';
-                        tasks.push({
-                            date: intDate, html: `🐾 <strong>【${escapeHtml(typeStr)}】</strong>${escapeHtml(comp.name)}<br>⏰ 日時: ${comp.interviewDate}`,
+                        allTasks.push({
+                            type: 'INTERVIEW', companyIndex: originalIdx, date: intDate,
+                            html: `🐾 <strong>【${escapeHtml(typeStr)}】</strong>${escapeHtml(comp.name)}<br>⏰ 日時: ${comp.interviewDate}`,
                             color: '#ffd43b', bg: '#fffdf0'
                         });
                     }
                 }
             });
 
-            // 締め切り順にソート (ここがポイント！)
-            tasks.sort((a, b) => a.date - b.date);
+            // 締め切り順にソート
+            allTasks.sort((a, b) => a.date - b.date);
 
-            tasks.forEach(task => {
+            // ページネーション計算 (1ページに最大6件)
+            const totalTasks = allTasks.length;
+            const totalPages = Math.ceil(totalTasks / tasksPerPage) || 1;
+            
+            // 削除等で現在のページにデータが無くなったら前のページに戻す調整
+            if (currentTaskPage > totalPages) { currentTaskPage = totalPages; }
+
+            const pagContainer = document.getElementById('taskPagination');
+            const pageNumSpan = document.getElementById('taskPageNum');
+            
+            if (totalTasks > tasksPerPage) {
+                pagContainer.style.display = 'flex';
+                pageNumSpan.textContent = `${currentTaskPage} / ${totalPages}`;
+            } else {
+                pagContainer.style.display = 'none';
+            }
+
+            const startIndex = (currentTaskPage - 1) * tasksPerPage;
+            const pageTasks = allTasks.slice(startIndex, startIndex + tasksPerPage);
+
+            pageTasks.forEach((task, pageIdx) => {
                 const li = document.createElement('li');
                 li.className = 'todo-item';
                 li.style.borderColor = task.color;
                 li.style.backgroundColor = task.bg;
-                li.innerHTML = task.html;
+                
+                // タスク情報のHTML
+                const infoDiv = document.createElement('div');
+                infoDiv.innerHTML = task.html;
+                li.appendChild(infoDiv);
+
+                // クリックされたら開く「完了/まだ」のボタンエリア
+                const actionId = `task-action-${startIndex + pageIdx}`;
+                const actionDiv = document.createElement('div');
+                actionDiv.id = actionId;
+                actionDiv.className = 'task-action-overlay';
+                actionDiv.innerHTML = `
+                    <button class="btn-task-action btn-task-done" onclick="completeTask(event, ${task.companyIndex}, '${task.type}')">完了</button>
+                    <button class="btn-task-action btn-task-yet" onclick="closeTaskAction(event, '${actionId}')">まだ</button>
+                `;
+                li.appendChild(actionDiv);
+
+                // タスクを押した時のトグル動作
+                li.setAttribute('onclick', `toggleTaskAction('${actionId}')`);
                 todoList.appendChild(li);
             });
-            if (tasks.length === 0) {
+
+            if (totalTasks === 0) {
                 todoList.innerHTML = '<li class="todo-empty">直近7日以内の予定はないよ。のんびりいこう〜☕️</li>';
+                pagContainer.style.display = 'none';
             }
         }
 
+        // タスクが押されたら「完了/まだ」ボタンを表示する
+        function toggleTaskAction(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                const isVisible = el.style.display === 'flex';
+                // 一旦全部閉じる
+                document.querySelectorAll('.task-action-overlay').forEach(box => box.style.display = 'none');
+                el.style.display = isVisible ? 'none' : 'flex';
+            }
+        }
+
+        // 「まだ」を押したら、アクションエリアだけ閉じる
+        function closeTaskAction(e, id) {
+            e.stopPropagation(); // 親liのクリックイベント発火を防ぐ
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        }
+
+        // 「完了」を押したらそのタスクを非表示にしてFirebaseへ保存
+        function completeTask(e, companyIdx, taskType) {
+            e.stopPropagation();
+            if (taskType === 'ES') {
+                companies[companyIdx].esTaskCompleted = true;
+            } else {
+                companies[companyIdx].interviewTaskCompleted = true;
+            }
+            saveToFirebase(window.currentUid); // リロードなしで即座に次のタスクが1つ前に押し出されるよ！
+        }
+
+        // タスクのページ移動
+        function changeTaskPage(offset) {
+            currentTaskPage += offset;
+            if (currentTaskPage < 1) currentTaskPage = 1;
+            renderTodoList();
+        }
+
+        // ===================================================
+        // カレンダーコントロール
+        // ===================================================
         function changeMonth(offset) {
             currentCalendarDate.setMonth(currentCalendarDate.getMonth() + offset);
             closeCalendarPopup();
@@ -763,7 +885,6 @@
         }
         document.addEventListener('click', () => { closeCalendarPopup(); });
 
-        // カレンダーの色もステータス連動パステル
         function getDotColor(status) {
             switch(status) {
                 case '未エントリー': case '説明会': case 'その他': return '#ced4da';
@@ -863,7 +984,9 @@
                 nextDateType: document.getElementById('nextDateType').value,
                 interviewDate: intFinal,
                 status: document.getElementById('selectionStatus').value,
-                memo: document.getElementById('memo').value
+                memo: document.getElementById('memo').value,
+                esTaskCompleted: false,       // 初期化
+                interviewTaskCompleted: false // 初期化
             };
 
             companies.push(companyData);
@@ -903,6 +1026,7 @@
             return str.replace(/-/g, "/");
         }
 
+        // 特殊文字を安全に変換するよ
         function escapeHtml(str) {
             if (!str) return '';
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
