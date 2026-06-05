@@ -86,13 +86,13 @@
         @keyframes fuwafuwa { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 
         /* PC・共通レイアウト */
-        .pc-top-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 24px; align-items: start; }
         .flexible-layout-wrapper { display: flex; flex-direction: column; }
+        .pc-top-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 24px; align-items: start; }
         
-        /* PC上の基本配置順 (order) */
+        /* 【PC上での配置順】 1: 今週のタスク ➔ 2: 企業追加 ➔ 3: 企業一覧 */
         .section-top-row { order: 1; }
-        .section-company-list { order: 2; }
-        .section-add-company { order: 3; }
+        .section-add-company { order: 2; }
+        .section-company-list { order: 3; }
         
         /* カレンダー */
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 8px; }
@@ -216,7 +216,7 @@
             .status-badge { font-size: 0.7rem; padding: 4px 10px; border-radius: 12px; }
             .btn-cute { font-size: 0.75rem; padding: 6px 12px; border-radius: 20px; }
 
-            /* 【スマホ並び替え】1: 今週やること(top-row) -> 2: 企業一覧(list) -> 3: 企業追加(add) */
+            /* 【スマホ並び替え】スマホ時はそのまま（1:今週やること ➔ 2:企業一覧 ➔ 3:企業追加） */
             .flexible-layout-wrapper { display: flex; flex-direction: column; }
             .section-top-row { order: 1; display: block !important; } 
             .section-company-list { order: 2; }  
@@ -290,7 +290,7 @@
 
         <div class="flexible-layout-wrapper">
             
-            <!-- 上段セクション -->
+            <!-- 上段セクション (今週やること / カレンダー) -->
             <div class="section-top-row">
                 <div class="pc-top-grid">
                     <!-- タスク一覧 -->
@@ -321,36 +321,7 @@
                 </div>
             </div>
             
-            <!-- 📊 登録企業一覧 -->
-            <div class="card section-company-list">
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
-                    <h3 style="margin:0; color:#ff6b8b; font-size:1.0rem; text-align: left;">📊 登録企業一覧</h3>
-                    <input type="text" id="searchBox" placeholder="企業名で探す... 🔍" oninput="renderTable()" style="max-width:220px; padding:6px 12px; border-radius:20px; width:100%;">
-                </div>
-                
-                <!-- 💻 パソコン用：従来のテーブル表示 -->
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style="width: 14%;">企業名</th>
-                                <th style="width: 16%;">マイページ / ID</th>
-                                <th style="width: 18%;">ES提出期限/状況</th>
-                                <th style="width: 13%;">次回日程</th>
-                                <th style="width: 11%;">ステータス</th>
-                                <th style="width: 19%;">メモ</th>
-                                <th style="width: 9%;">操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="companyTableBody"></tbody>
-                    </table>
-                </div>
-
-                <!-- 📱 スマホ用 -->
-                <div id="mobileCompanyList" class="mobile-company-list-wrapper"></div>
-            </div>
-
-            <!-- 🏢 エントリー企業の追加 -->
+            <!-- 🏢 エントリー企業の追加 (PCでは2番目、スマホでは3番目に配置) -->
             <div class="card section-add-company" style="padding: 12px 16px;">
                 <h3 style="margin-top:0; color:#ff6b8b; font-size:0.9rem; margin-bottom:8px; text-align: left;">🏢 エントリー企業の追加</h3>
                 <form id="companyForm">
@@ -404,6 +375,35 @@
                         </div>
                     </div>
                 </form>
+            </div>
+            
+            <!-- 📊 登録企業一覧 (PCでは3番目、スマホでは2番目に配置) -->
+            <div class="card section-company-list">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
+                    <h3 style="margin:0; color:#ff6b8b; font-size:1.0rem; text-align: left;">📊 登録企業一覧</h3>
+                    <input type="text" id="searchBox" placeholder="企業名で探す... 🔍" oninput="renderTable()" style="max-width:220px; padding:6px 12px; border-radius:20px; width:100%;">
+                </div>
+                
+                <!-- 💻 パソコン用：従来のテーブル表示 -->
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 14%;">企業名</th>
+                                <th style="width: 16%;">マイページ / ID</th>
+                                <th style="width: 18%;">ES提出期限/状況</th>
+                                <th style="width: 13%;">次回日程</th>
+                                <th style="width: 11%;">ステータス</th>
+                                <th style="width: 19%;">メモ</th>
+                                <th style="width: 9%;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="companyTableBody"></tbody>
+                    </table>
+                </div>
+
+                <!-- 📱 スマホ用 -->
+                <div id="mobileCompanyList" class="mobile-company-list-wrapper"></div>
             </div>
 
         </div>
@@ -905,7 +905,6 @@
                         nextText = comp.nextDateType ? `【${comp.nextDateType}】${intData.date} ${intData.time}` : `${intData.date} ${intData.time}`;
                     }
 
-                    // 🔗の絵文字を除去
                     mCard.innerHTML = `
                         <div class="m-comp-header" onclick="toggleMobileAccordion(${idx})">
                             <span>🏢 ${escapeHtml(comp.name)}</span>
@@ -1137,7 +1136,7 @@
             if (targetPopup && !alreadyOpen) { targetPopup.style.display = 'block'; }
         };
         
-            document.addEventListener('click', () => { document.querySelectorAll('.calendar-popup').forEach(p => p.style.display = 'none'); });
+        document.addEventListener('click', () => { document.querySelectorAll('.calendar-popup').forEach(p => p.style.display = 'none'); });
 
         function getDotColor(status) {
             switch(status) {
