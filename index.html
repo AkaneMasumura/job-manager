@@ -161,6 +161,11 @@
             align-items: center; z-index: 10000; font-size: 1.1rem; font-weight: bold; color: #ff85a2;
         }
     </style>
+   
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
 </head>
 <body>
 
@@ -307,19 +312,48 @@
     </div>
 
     <script>
-        // 【最重要】ここにGoogleのウェブアプリURLを貼り付けてください！
-        const GAS_WEB_APP_URL = "ここにあなたのURL";
+       const firebaseConfig = {
+  apiKey: "AIzaSyBAA9XGrLAtZ5IUD0EIOhDe_bmCrM6blpo",
+  authDomain: "shukatsu-tool-e9973.firebaseapp.com",
+  projectId: "shukatsu-tool-e9973",
+  storageBucket: "shukatsu-tool-e9973.firebasestorage.app",
+  messagingSenderId: "193244258703",
+  appId: "1:193244258703:web:44b4237a3e88006c90ebfa"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.firestore();
+const auth = firebase.auth();
 
         let currentCalendarDate = new Date();
         let companies = [];
         let userName = "";
         let editingIndex = null;
 
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
+
     initTimeSelects();
+
     updateGreetingMessage();
-    showLoading(false);
-    setInterval(updateGreetingMessage, 60000);
+
+    setInterval(
+        updateGreetingMessage,
+        60000
+    );
+
+    auth.signInAnonymously()
+    .then(async (userCredential) => {
+
+        const uid = userCredential.user.uid;
+
+        window.currentUid = uid;
+
+        await loadFromFirebase(uid);
+
+    })
+    .catch(console.error);
+
 });
 
         function initTimeSelects() {
@@ -392,71 +426,47 @@
             document.getElementById('greetingMessage').textContent = msg;
         }
 
-        function loadFromGoogleCloud() {
-            showLoading(true, "データをGoogleから読み込んでいます...");
-            updateSyncStatus("同期中...", "#f39c12");
-            
-            fetch(GAS_WEB_APP_URL, {
-                method: "POST",
-                body: JSON.stringify({ action: "load" })
-            })
-            .then(res => res.json())
-            .then(res => {
-                if (res.success && res.data) {
-                    companies = res.data.companies || [];
-                    userName = res.data.userName || "";
-                    updateTitle();
-                    renderApp();
-                    updateSyncStatus("● クラウド同期済み", "#51cf66");
-                    if (!userName) {
-                        setTimeout(() => { askUserName(); }, 300);
-                    }
-                } else {
-                    alert("データの読み込みに失敗しました。");
-                    updateSyncStatus("❌ 同期失敗", "#e74c3c");
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                alert("通信エラーが発生しました。");
-                updateSyncStatus("❌ 接続エラー", "#e74c3c");
-            })
-            .finally(() => {
-                showLoading(false);
-            });
-        }
+        async function loadFromFirebase(uid) {
 
-        function saveToGoogleCloud() {
-            updateSyncStatus("変更を送信中...", "#f39c12");
-            
-            fetch(GAS_WEB_APP_URL, {
-                method: "POST",
-                body: JSON.stringify({
-                    action: "save",
-                    data: companies,
-                    userName: userName
-                })
-            })
-            .then(res => res.json())
-            .then(res => {
-                if (res.success) {
-                    updateSyncStatus("● 自動保存完了", "#51cf66");
-                } else {
-                    updateSyncStatus("❌ 自動保存失敗", "#e74c3c");
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                updateSyncStatus("❌ 保存エラー", "#e74c3c");
-            });
-        }
+    const doc = await db.collection("users")
+        .doc(uid)
+        .get();
+
+    if(doc.exists){
+
+        const data = doc.data();
+
+        companies = data.companies || [];
+        userName = data.userName || "";
+
+        updateTitle();
+        renderApp();
+    }
+
+    showLoading(false);
+}
+
+        async function saveToFirebase(uid){
+
+    await db.collection("users")
+        .doc(uid)
+        .set({
+            companies,
+            userName
+        });
+
+    updateSyncStatus(
+        "● 自動保存完了",
+        "#51cf66"
+    );
+}
 
         function askUserName() {
             const name = prompt("あなたのお名前を入力してください：\n（例：あかね）");
             if (name && name.trim()) {
                 userName = name.trim();
                 updateTitle();
-                // saveToGoogleCloud();
+                saveToFirebase(window.currentUid);
             }
         }
 
@@ -465,7 +475,7 @@
             if (name !== null) {
                 userName = name.trim();
                 updateTitle();
-                // saveToGoogleCloud();
+                saveToFirebase(window.currentUid);
             }
         }
 
@@ -695,7 +705,7 @@
 
             editingIndex = null;
             renderApp();
-            // saveToGoogleCloud();
+            saveToFirebase(window.currentUid);
         }
 
         function toggleEsDone(index, isChecked) {
@@ -704,7 +714,7 @@
                 companies[index].status = 'ES提出済み';
             }
             renderApp();
-            // saveToGoogleCloud();
+            saveToFirebase(window.currentUid);
         }
 
         function renderTodoList() {
@@ -918,7 +928,7 @@
             document.getElementById('esTimeContainer').style.display = "none";
             document.getElementById('interviewTimeContainer').style.display = "none";
             document.getElementById('otherStatusGroup').style.display = "none";
-            // saveToGoogleCloud();
+            saveToFirebase(window.currentUid);
         });
 
         function deleteCompany(index) {
@@ -926,7 +936,7 @@
                 if (editingIndex === index) editingIndex = null;
                 companies.splice(index, 1); 
                 renderApp(); 
-                // saveToGoogleCloud();
+                saveToFirebase(window.currentUid);
             }
         }
 
