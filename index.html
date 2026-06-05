@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>就活スケジュール管理アプリ</title>
     
+    <!-- Firebase SDK (v8形式) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
@@ -195,9 +197,15 @@
         .table-edit-box { width: 100% !important; padding: 4px !important; font-size: 0.8rem !important; border-radius: 8px !important; }
 
         /* ===================================================
-           📱 スマホ表示時
+           💻 画面幅が狭いときのレスポンス調整
            =================================================== */
-        @media (max-width: 920px) {
+        @media (max-width: 950px) {
+            /* PCでの画面分割（ハーフウィンドウ）時：上段2カラムの比率を縦並びではなく均等に保ち、窮屈さを防ぐ */
+            .pc-top-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+        }
+
+        /* 📱 純粋なスマホ表示時 (680px以下) */
+        @media (max-width: 680px) {
             body { padding: 8px; }
             .card { padding: 14px; border-radius: 14px; margin-bottom: 12px; width: 100% !important; box-sizing: border-box; }
             .header-area { padding: 8px 12px; margin-bottom: 12px; border-radius: 14px; width: 100% !important; box-sizing: border-box; }
@@ -205,7 +213,7 @@
             .status-badge { font-size: 0.7rem; padding: 4px 10px; border-radius: 12px; }
             .btn-cute { font-size: 0.75rem; padding: 6px 12px; border-radius: 20px; }
 
-            /* カレンダーセクションを非表示 */
+            /* 完全なスマホ幅のときだけカレンダーセクションを非表示 */
             .section-top-row { display: none !important; }
 
             /* 一覧を上、追加欄を下に配置 */
@@ -213,7 +221,7 @@
             .section-company-list { order: 1; } 
             .section-add-company { order: 2; }  
 
-            /* スマホでは1行はみ出るので縦並びに崩す */
+            /* スマホでは縦並びに崩す */
             .form-row-single { flex-direction: column; align-items: stretch; gap: 10px; }
             label { font-size: 0.75rem; margin-bottom: 2px; }
             
@@ -233,6 +241,7 @@
 
     <div class="container">
         
+        <!-- ヘッダー -->
         <div class="header-area">
             <div id="appTitleDisplay" class="title-editable" onclick="changeAppTitle()">読み込み中...</div>
             <div class="auth-right">
@@ -247,8 +256,10 @@
 
         <div class="flexible-layout-wrapper">
             
+            <!-- 上段セクション (PC画面分割時でも表示キープ) -->
             <div class="section-top-row">
                 <div class="pc-top-grid">
+                    <!-- タスク一覧 -->
                     <div class="card">
                         <h3 style="margin-top:0; color:#ff6b8b; font-size:1.0rem; margin-bottom: 12px; text-align: left;">📅 今週やるべきこと (直近7日以内)</h3>
                         <ul id="todoList" class="todo-list"></ul>
@@ -258,6 +269,7 @@
                             <button onclick="changeTaskPage(1)" class="action-btn" style="padding:2px 8px;">次 ▶</button>
                         </div>
                     </div>
+                    <!-- カレンダー -->
                     <div>
                         <div id="greetingMessage" class="greeting-box">こんにちは✨</div>
                         <div class="card" style="padding: 16px;">
@@ -275,6 +287,7 @@
                 </div>
             </div>
             
+            <!-- 📊 登録企業一覧 -->
             <div class="card section-company-list">
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
                     <h3 style="margin:0; color:#ff6b8b; font-size:1.0rem; text-align: left;">📊 登録企業一覧</h3>
@@ -299,6 +312,7 @@
                 </div>
             </div>
 
+            <!-- 🏢 エントリー企業の追加 -->
             <div class="card section-add-company" style="padding: 12px 16px;">
                 <h3 style="margin-top:0; color:#ff6b8b; font-size:0.9rem; margin-bottom:8px; text-align: left;">🏢 エントリー企業の追加</h3>
                 <form id="companyForm">
@@ -308,6 +322,7 @@
                         <div><label>マイページURL</label><input type="url" id="mypageUrl" placeholder="https://..."></div>
                         <div><label>マイページID</label><input type="text" id="mypageId"></div>
                         
+                        <!-- ES締切日 -->
                         <div class="date-time-card-box flex-wide">
                             <label style="color:#ff6b8b;">ES締切日</label>
                             <input type="date" id="esDeadlineDate">
@@ -317,6 +332,7 @@
                             </div>
                         </div>
                         
+                        <!-- 次回の予定日時 -->
                         <div class="date-time-card-box flex-wide">
                             <label style="color:#ff6b8b;">次回予定/日時</label>
                             <select id="nextDateType" style="margin-bottom:2px; padding: 2px 4px;">
@@ -375,7 +391,7 @@
         window.companies = [];
         window.userName = "ユーザー";
         window.currentUid = null;
-        let editingIndex = null; // 元の配列(companies)上のインデックスを保持
+        let editingIndex = null; 
         let currentCalendarDate = new Date();
         let unsubscribeRealtime = null;
 
@@ -541,9 +557,6 @@
             return { date: p[0].replace(/-/g, "/"), time: p[1] || "" };
         }
 
-        // ===================================================
-        // 📊 テーブル表のレンダリング (バグ修正版)
-        // ===================================================
         function renderTable() {
             const tbody = document.getElementById('companyTableBody');
             if (!tbody) return;
@@ -551,11 +564,9 @@
 
             const keyword = document.getElementById("searchBox")?.value.toLowerCase() || "";
             
-            // 元の配列のインデックスを保存しながらソートオブジェクトを生成
             const indexedCompanies = companies.map((comp, idx) => ({ comp, idx }));
             indexedCompanies.sort((a, b) => a.comp.name.localeCompare(b.comp.name, 'ja'));
 
-            // 検索キーワードでフィルタリング
             const filteredCompanies = indexedCompanies.filter(({ comp }) => comp.name.toLowerCase().includes(keyword));
 
             if (filteredCompanies.length === 0) {
@@ -567,9 +578,7 @@
                 const tr = document.createElement('tr');
                 tr.className = 'status-row-white';
 
-                // ここを修正：現在編集対象に選ばれているインデックス（editingIndex）と、この行の元のインデックス（idx）が一致するかで判定
                 if (editingIndex === idx) {
-                    // 🛠️ テーブル内インライン編集モード
                     const esObj = parseDateTimeString(comp.esDeadline);
                     const intObj = parseDateTimeString(comp.interviewDate);
                     
@@ -644,7 +653,6 @@
                             </div>
                         </td>
                     `;
-                    // プルダウンの遅延初期化バリューセット
                     setTimeout(() => {
                         if(esObj.hasTime){ 
                             const eh = document.getElementById(`inline_esHour_${idx}`);
@@ -658,7 +666,6 @@
                         }
                     }, 0);
                 } else {
-                    // 👀 通常表示テーブル行モード
                     let mypageHtml = '<span style="color:#ccc;">-</span>';
                     if (comp.mypageUrl || comp.mypageId) {
                         const linkPart = comp.mypageUrl ? `<a href="${comp.mypageUrl}" target="_blank">${escapeHtml(formatMypageUrlText(comp.mypageUrl))}</a>` : '<span style="color:#868e96;">-</span>';
@@ -783,7 +790,6 @@
             saveToFirebase(window.currentUid);
         }
 
-        // 📅 やるべきことタスクの描画
         function renderTodoList() {
             const todoList = document.getElementById('todoList');
             if (!todoList) return;
@@ -903,11 +909,11 @@
 
         function getDotColor(status) {
             switch(status) {
-                case '未エントリー': case '説明会': case 'その他': return '#e2e8f0'; // ミルキーグレー
-                case 'ES作成中': case 'ES提出済み': return '#ffccd5'; // ふんわりミルキーピンク
-                case 'テスト': case 'GD': case '一次面接': case '二次面接': case '最終面接': return '#fff3bf'; // レモンマカロンイエロー
-                case 'インターン': case '結果待ち': return '#c3fae8'; // さわやかパステルミント
-                case '内定': return '#eebefa'; // ゆめかわラベンダーパープル
+                case '未エントリー': case '説明会': case 'その他': return '#e2e8f0'; 
+                case 'ES作成中': case 'ES提出済み': return '#ffccd5'; 
+                case 'テスト': case 'GD': case '一次面接': case '二次面接': case '最終面接': return '#fff3bf'; 
+                case 'インターン': case '結果待ち': return '#c3fae8'; 
+                case '内定': return '#eebefa'; 
                 default: return '#e2e8f0';
             }
         }
