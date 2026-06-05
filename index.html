@@ -37,7 +37,7 @@
         }
         
         .container {
-            max-width: 1100px;
+            max-width: 1200px;
             margin: 0 auto;
         }
         
@@ -48,7 +48,7 @@
             margin-bottom: 24px;
             box-shadow: 0 8px 16px rgba(255, 183, 197, 0.15);
             border: 2px solid var(--border-soft);
-            box-sizing: border-box; /* 全て要素の内側に含める設定 */
+            box-sizing: border-box;
             width: 100%;
         }
         
@@ -146,38 +146,88 @@
             50% { transform: translateY(-4px); }
         }
 
-        /* 💻 パソコン標準画面用のレイアウト（上段2分割用のグリッド） */
+        /* 💻 PC用グリッドレイアウト */
         .pc-top-grid {
             display: grid;
-            grid-template-columns: 1.2fr 0.8fr;
+            grid-template-columns: 1.1fr 0.9fr;
             gap: 24px;
             align-items: start;
         }
 
-        /* アプリ全体の並び替え用ラッパー（デバイスごとに表示順を細かく制御するための設定） */
         .flexible-layout-wrapper {
             display: flex;
             flex-direction: column;
         }
 
-        /* 通常PC表示での並び順 */
-        .section-top-row { order: 1; }       /* 今週の予定とカレンダー（上段） */
-        .section-add-company { order: 2; }   /* エントリー企業の追加 */
-        .section-company-list { order: 3; }  /* 登録企業一覧 */
+        .section-top-row { order: 1; }
+        .section-add-company { order: 2; }
+        .section-company-list { order: 3; }
         
+        /* 📅 カレンダー関係（セルの真上にポップアップを出すよう調整） */
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 8px; }
         .calendar-header-cell { text-align: center; font-weight: bold; padding: 4px; background: #ffe3e8; font-size: 0.75rem; border-radius: 6px; color: #ff6b8b;}
-        .calendar-cell { background: #fff; border: 1px solid var(--border-soft); min-height: 42px; padding: 2px; position: relative; border-radius: 6px; }
+        .calendar-cell { 
+            background: #fff; 
+            border: 1px solid var(--border-soft); 
+            min-height: 44px; 
+            padding: 2px; 
+            position: relative; /* 子要素のポップアップの基準位置にする */
+            border-radius: 6px; 
+        }
         .calendar-cell.other-month { background: #fdfafb; color: #cbd5e1; border-color: #f1f5f9; }
         .calendar-cell.today { border: 2px solid #ff6b8b; background: #fff0f3; }
         .calendar-day-num { font-weight: bold; font-size: 0.75rem; margin-left: 2px;}
         .calendar-dots { display: flex; gap: 3px; justify-content: center; margin-top: 2px; }
-        .cal-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; cursor: pointer; border: 1px solid #ffa6ba; }
         
+        .cal-dot { 
+            width: 10px; 
+            height: 10px; 
+            border-radius: 50%; 
+            display: inline-block; 
+            cursor: pointer; 
+            border: 1px solid #ffa6ba; 
+        }
+        
+        /* まる（cal-dot）の真上に浮かび上がる吹き出しポップアップ */
         .calendar-popup {
-            position: absolute; background: white; border: 2px solid var(--primary-pink);
-            padding: 10px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            z-index: 1000; display: none; font-size: 0.75rem; min-width: 140px;
+            position: absolute;
+            bottom: 110%; /* セルのすぐ上に配置 */
+            left: 50%;
+            transform: translateX(-50%);
+            background: white; 
+            border: 2px solid var(--primary-pink);
+            padding: 8px 10px; 
+            border-radius: 10px; 
+            box-shadow: 0 4px 12px rgba(255, 183, 197, 0.3);
+            z-index: 1000; 
+            display: none; 
+            font-size: 0.75rem; 
+            min-width: 150px;
+            max-width: 200px;
+            text-align: left;
+            word-break: break-all;
+        }
+        /* 吹き出しのちっちゃな三角の矢印 */
+        .calendar-popup::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 6px;
+            border-style: solid;
+            border-color: white transparent transparent transparent;
+        }
+        .calendar-popup::before {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 8px;
+            border-style: solid;
+            border-color: var(--primary-pink) transparent transparent transparent;
+            z-index: -1;
         }
         
         /* タスクリスト */
@@ -207,20 +257,21 @@
             gap: 15px; margin-top: 10px; font-size: 0.8rem; font-weight: bold;
         }
         
-        /* フォームの基本2列グリッド */
+        /* フォーム入力欄のスタイル */
         .form-grid-two-rows {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 15px;
             margin-bottom: 15px;
         }
-        /* 時間枠用内側カードボックス */
+        
+        /* 企業の追加：日時用の外枠ボックス */
         .date-time-card-box {
             border: 2px solid var(--border-soft); 
             padding: 12px; 
             border-radius: 12px; 
             background: #fffbfb;
-            box-sizing: border-box; /* 絶対にハミ出さない魔法の記述 */
+            box-sizing: border-box;
             width: 100%;
         }
         
@@ -232,6 +283,7 @@
         }
         input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary-pink); background-color: #fff; }
         
+        /* 選考ステータスの背景パステルカラー */
         .status-row-white { background-color: var(--status-white); }
         .status-row-pink { background-color: var(--status-pink); }
         .status-row-yellow { background-color: var(--status-yellow); }
@@ -247,102 +299,51 @@
             display:none; justify-content:center; align-items:center; z-index:9999; font-weight:bold;
         }
 
-        /* 企業一覧用アコーディオンボックス */
-        .mobile-company-item {
+        /* ===================================================
+           💻 パソコン表示時の「タップなし一列全開」スタイル
+           =================================================== */
+        .pc-company-row {
             border: 2px solid var(--border-soft);
-            border-radius: 12px;
-            margin-bottom: 8px;
-            overflow: hidden;
+            border-radius: 14px;
+            margin-bottom: 12px;
+            padding: 16px;
             background: white;
             box-sizing: border-box;
             width: 100%;
-        }
-        .mobile-company-trigger {
-            padding: 14px;
-            font-weight: bold;
-            font-size: 0.95rem;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1.2fr 1.2fr 1.5fr 1fr; /* 各情報を1列に収める */
+            gap: 12px;
             align-items: center;
             text-align: left;
-        }
-        .mobile-company-trigger::after {
-            content: '▼';
-            font-size: 0.75rem;
-            color: #ff6b8b;
-            margin-left: 8px;
-        }
-        .mobile-company-detail {
-            display: none; 
-            padding: 16px;
-            border-top: 1px dashed var(--border-soft);
             font-size: 0.85rem;
-            text-align: left;
-            background: #fffafb;
-            box-sizing: border-box;
-            width: 100%;
+        }
+        .pc-company-cell {
+            word-break: break-all;
+        }
+        .pc-company-cell-label {
+            display: none; /* PCでは項目見出しは非表示 */
         }
         
-        /* 💻 パソコン分割編集時にスクロールを発生させない左右2列コンパクトレイアウト */
-        .edit-grid-container {
+        /* パソコンでのその場編集インライン用グリッド */
+        .pc-edit-container {
+            grid-column: span 6;
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(4, 1fr);
             gap: 12px;
-            box-sizing: border-box;
-            width: 100%;
-        }
-        .edit-grid-full {
-            grid-column: span 2;
-        }
-        
-        /* 詳細内インライン編集用入力パーツ */
-        .mobile-company-detail input[type="text"],
-        .mobile-company-detail input[type="date"],
-        .mobile-company-detail input[type="url"],
-        .mobile-company-detail select,
-        .mobile-company-detail textarea {
-            margin-bottom: 6px;
-            padding: 8px;
-            font-size: 0.85rem;
-            border-radius: 8px;
-            border: 1px solid var(--primary-pink);
-            width: 100% !important;
+            background: #fffafb;
+            padding: 14px;
+            border-radius: 12px;
             box-sizing: border-box;
         }
-        .mobile-company-detail label {
-            font-size: 0.8rem;
-            color: #ff6b8b;
-            margin-top: 4px;
-            font-weight: bold;
-        }
-        
-        .mobile-detail-row {
-            margin-bottom: 8px;
-            word-break: break-all; 
-        }
-        .mobile-detail-label {
-            font-weight: bold;
-            color: #ff6b8b;
-            display: inline-block;
-            width: 110px;
-        }
-        .mobile-detail-actions {
-            margin-top: 10px;
+        .pc-edit-full {
+            grid-column: span 4;
             display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            box-sizing: border-box;
-            width: 100%;
-        }
-        .mobile-detail-actions .action-btn {
-            flex: 1;
-            padding: 6px;
-            font-size: 0.8rem;
-            text-align: center;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 6px;
         }
 
-        /* 時間指定セレクトボックスの横並び */
+        /* 時間指定の横レイアウト */
         .time-box-flex {
             display: flex;
             align-items: center;
@@ -355,22 +356,19 @@
             flex: 1;
             width: 100% !important;
             min-width: 0;
-            display: inline-block;
             padding: 6px !important;
         }
 
-        /* 📱 スマホ表示用、および 💻 PC画面分割時（幅が920px以下になった時）の共通レスポンシブコード */
+        /* ===================================================
+           📱 スマホ画面表示、およびPC2分割時 (横幅920px以下)
+           =================================================== */
         @media (max-width: 920px) {
-            body {
-                padding: 8px;
-            }
+            body { padding: 8px; }
             .card {
                 padding: 14px;
                 border-radius: 14px;
                 margin-bottom: 12px;
-                box-shadow: 0 4px 10px rgba(255, 183, 197, 0.1);
                 width: 100% !important;
-                max-width: 100% !important;
                 box-sizing: border-box;
             }
             
@@ -385,58 +383,84 @@
             .status-badge { font-size: 0.7rem; padding: 4px 10px; border-radius: 12px; }
             .btn-cute { font-size: 0.75rem; padding: 6px 12px; border-radius: 20px; }
 
-            /* PCの上段2分割構造を解除して縦1列にスタックさせる */
-            .pc-top-grid {
-                display: block;
-                width: 100%;
+            /* 🚫 【スマホ・分割時】カレンダーが入っている最上段のセクションを完全に非表示にする */
+            .section-top-row {
+                display: none !important;
             }
 
-            /* 🔄 【順番並び替え制御】スマホ画面、およびPC分割時は「一覧を上、入力欄を下」にする */
-            .section-top-row { order: 1; }      /* ① カレンダー・やるべきこと（カレンダーは消さず残す！） */
-            .section-company-list { order: 2; } /* ② 登録企業一覧をここへ！ */
-            .section-add-company { order: 3; }  /* ③ 企業の追加を一番下へ！ */
+            /* 🔄 並び順を制御（一覧が上、入力欄が下） */
+            .flexible-layout-wrapper { display: flex; flex-direction: column; }
+            .section-company-list { order: 1; } 
+            .section-add-company { order: 2; }  
 
-            /* 入力グリッドを完全に1列化して左右のハミ出しを完全ゼロにする */
+            /* 追加フォームをスマホ用に1列化 */
             .form-grid-two-rows {
                 grid-template-columns: 1fr; 
-                gap: 8px; 
+                gap: 10px; 
             }
             label { font-size: 0.75rem; margin-bottom: 2px; }
             
-            /* 横幅が合っていなかった原因の入力を、box-sizing含めて100%幅に完全統一 */
-            input[type="text"], input[type="date"], input[type="url"], select, textarea, .date-time-card-box {
+            /* 📱 スマホの日時選択外枠ボックスの横幅を、上のID/URLテキスト枠と寸分狂わず「100%」に完全一致させる */
+            .date-time-card-box {
+                padding: 10px; 
+                border-radius: 12px;
+                border: 2px solid var(--border-soft);
+                background-color: #fffafb;
+                width: 100% !important;
+                box-sizing: border-box; /* paddingを含めて100%にする設定 */
+            }
+            
+            input[type="text"], input[type="date"], input[type="url"], select, textarea {
                 padding: 8px 10px; 
                 font-size: 0.85rem; 
-                border-radius: 8px;
+                border-radius: 12px;
                 width: 100% !important;
                 box-sizing: border-box;
             }
-            textarea { height: 36px; }
+            textarea { height: 38px; }
 
             #companyForm button[type="submit"] {
                 width: 100%;
-                padding: 8px;
-                font-size: 0.8rem;
-                margin-top: 4px;
+                padding: 10px;
+                font-size: 0.85rem;
             }
 
-            /* 分割中やスマホ編集時は1列コンパクトにして、保存ボタンを即タップできるようにする */
-            .edit-grid-container {
+            /* 📱 スマホ・分割中の一覧表示を「縦並びのカード」に組み替える */
+            .pc-company-row {
+                display: block; /* グリッドを解除して縦積み */
+                padding: 12px;
+                border-radius: 12px;
+                margin-bottom: 10px;
+                width: 100% !important;
+                box-sizing: border-box;
+            }
+            .pc-company-cell {
+                margin-bottom: 6px;
+                word-break: break-all;
+            }
+            /* スマホの時だけ情報の左側に「項目名」を表示させる */
+            .pc-company-cell-label {
+                display: inline-block;
+                font-weight: bold;
+                color: #ff6b8b;
+                width: 95px;
+            }
+            
+            /* スマホ・分割時のその場インライン編集レイアウト */
+            .pc-edit-container {
                 grid-template-columns: 1fr;
+                gap: 8px;
+                padding: 10px;
+            }
+            .pc-edit-full {
+                grid-column: span 1;
+                flex-direction: column;
                 gap: 6px;
             }
-            .edit-grid-full {
-                grid-column: span 1;
+            .pc-edit-container .date-time-card-box {
+                width: 100% !important;
+                box-sizing: border-box;
             }
-
-            .mobile-company-trigger { padding: 12px; font-size: 0.9rem; }
-            .mobile-company-detail { padding: 12px; font-size: 0.8rem; }
-            .mobile-company-detail input[type="text"],
-            .mobile-company-detail input[type="date"],
-            .mobile-company-detail input[type="url"],
-            .mobile-company-detail select,
-            .mobile-company-detail textarea { padding: 6px; font-size: 0.8rem; width: 100% !important; box-sizing: border-box;}
-            .mobile-detail-label { width: 90px; }
         }
     </style>
 </head>
@@ -482,15 +506,21 @@
                                 </div>
                             </div>
                             <div id="calendarGrid" class="calendar-grid"></div>
-                            <div id="calendarPopup" class="calendar-popup">
-                                <div id="calendarPopupContent"></div>
-                            </div>
                         </div>
                     </div>
 
                 </div>
             </div>
             
+            <div class="card section-company-list">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
+                    <h3 style="margin:0; color:#ff6b8b; font-size:1.0rem; text-align: left;">📊 登録企業一覧</h3>
+                    <input type="text" id="searchBox" placeholder="企業名で探す... 🔍" oninput="renderTable()" style="max-width:220px; padding:6px 12px; border-radius:20px; width:100%;">
+                </div>
+                
+                <div id="companyMobileList"></div>
+            </div>
+
             <div class="card section-add-company" style="padding: 16px;">
                 <h3 style="margin-top:0; color:#ff6b8b; font-size:0.95rem; margin-bottom:10px; text-align: left;">🏢 エントリー企業の追加</h3>
                 <form id="companyForm">
@@ -546,15 +576,6 @@
                         <button type="submit" class="btn-cute">この企業を登録する ✨</button>
                     </div>
                 </form>
-            </div>
-
-            <div class="card section-company-list">
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
-                    <h3 style="margin:0; color:#ff6b8b; font-size:1.0rem; text-align: left;">📊 登録企業一覧</h3>
-                    <input type="text" id="searchBox" placeholder="企業名で探す... 🔍" oninput="renderTable()" style="max-width:220px; padding:6px 12px; border-radius:20px; width:100%;">
-                </div>
-                
-                <div id="companyMobileList"></div>
             </div>
 
         </div>
@@ -635,7 +656,6 @@
                 await auth.signInWithPopup(provider);
                 updateSyncStatus("同期中... ⏳", "#ffd43b");
             } catch (error) {
-                console.error(error);
                 alert("ログインに失敗しちゃった: " + error.message);
                 showLoading(false);
             }
@@ -744,19 +764,13 @@
             }
         }
 
-        window.toggleMobileDetail = function(idx) {
-            if (editingIndex === idx) return; 
-            const detailBox = document.getElementById(`mobile-detail-${idx}`);
-            if (detailBox) {
-                const isOpen = detailBox.style.display === 'block';
-                detailBox.style.display = isOpen ? 'none' : 'block';
-            }
-        };
-
+        // ===================================================
+        // 📊 登録企業一覧の描画（常に一列全開・その場編集）
+        // ===================================================
         function renderTable() {
-            const mobileList = document.getElementById('companyMobileList');
-            if (!mobileList) return;
-            mobileList.innerHTML = '';
+            const targetContainer = document.getElementById('companyMobileList');
+            if (!targetContainer) return;
+            targetContainer.innerHTML = '';
 
             const keyword = document.getElementById("searchBox")?.value.toLowerCase() || "";
             const indexedCompanies = companies.map((comp, idx) => ({ comp, idx }));
@@ -765,36 +779,26 @@
             const filteredCompanies = indexedCompanies.filter(({ comp }) => comp.name.toLowerCase().includes(keyword));
 
             if (filteredCompanies.length === 0) {
-                mobileList.innerHTML = `<div style="text-align:center; color:#868e96; padding:20px; font-size:0.85rem;">企業がまだ登録されていないよ🔍</div>`;
+                targetContainer.innerHTML = `<div style="text-align:center; color:#868e96; padding:20px; font-size:0.85rem;">企業がまだ登録されていないよ🔍</div>`;
                 return;
             }
 
             filteredCompanies.forEach(({ comp, idx }) => {
-                const mDiv = document.createElement('div');
-                mDiv.className = 'mobile-company-item';
-                
+                const rowDiv = document.createElement('div');
                 const bgClass = getStatusColorClass(comp.status);
-                
-                const trigger = document.createElement('div');
-                trigger.className = `mobile-company-trigger ${bgClass}`;
-                trigger.innerHTML = `<span>${escapeHtml(comp.name)} <small style="font-weight:normal; color:#868e96; font-size:0.75rem;">(${escapeHtml(comp.status)})</small></span>`;
-                trigger.setAttribute('onclick', `toggleMobileDetail(${idx})`);
-                
-                const detail = document.createElement('div');
-                detail.id = `mobile-detail-${idx}`;
-                detail.className = 'mobile-company-detail';
+                rowDiv.className = `pc-company-row ${bgClass}`;
                 
                 if (editingIndex === idx) {
+                    // 【その場編集モード】
                     const esObj = parseDateTimeString(comp.esDeadline);
                     const intObj = parseDateTimeString(comp.interviewDate);
-                    detail.style.display = 'block';
                     
                     let hOpts = "", mOpts = "";
                     for(let i=0;i<24;i++) { let v=String(i).padStart(2,'0'); hOpts+=`<option value="${v}">${v}</option>`; }
                     for(let i=0;i<60;i+=5) { let v=String(i).padStart(2,'0'); mOpts+=`<option value="${v}">${v}</option>`; }
 
-                    detail.innerHTML = `
-                        <div class="edit-grid-container">
+                    rowDiv.innerHTML = `
+                        <div class="pc-edit-container">
                             <div><label>企業名 *</label><input type="text" id="mob_name_${idx}" value="${escapeHtml(comp.name)}" required></div>
                             <div><label>HP URL</label><input type="url" id="mob_hp_${idx}" value="${escapeHtml(comp.hp || '')}"></div>
                             <div><label>マイページURL</label><input type="url" id="mob_mypageUrl_${idx}" value="${escapeHtml(comp.mypageUrl || '')}"></div>
@@ -851,41 +855,51 @@
                             </div>
                             <div><label>メモ</label><textarea id="mob_memo_${idx}" rows="2" style="height:38px;">${escapeHtml(comp.memo || '')}</textarea></div>
                             
-                            <div class="mobile-detail-actions edit-grid-full">
-                                <button class="action-btn" style="background:var(--primary-pink); color:white; border:none;" onclick="saveMobileEdit(${idx})">保存する ✨</button>
-                                <button class="action-btn" onclick="cancelInlineEdit()">戻る</button>
+                            <div class="pc-edit-full">
+                                <button class="action-btn" style="background:var(--primary-pink); color:white; border:none; padding: 6px 14px;" onclick="saveMobileEdit(${idx})">保存する ✨</button>
+                                <button class="action-btn" style="padding: 6px 14px;" onclick="cancelInlineEdit()">戻る</button>
                             </div>
                         </div>
                     `;
                     if(esObj.hasTime){ document.getElementById(`mob_esHour_${idx}`).value = esObj.hour; document.getElementById(`mob_esMin_${idx}`).value = esObj.min; }
                     if(intObj.hasTime){ document.getElementById(`mob_intHour_${idx}`).value = intObj.hour; document.getElementById(`mob_intMin_${idx}`).value = intObj.min; }
                 } else {
-                    detail.innerHTML = `
-                        <div class="mobile-detail-row"><span class="mobile-detail-label">ステータス:</span><strong>${escapeHtml(comp.status)}</strong></div>
-                        <div class="mobile-detail-row"><span class="mobile-detail-label">公式HP:</span>${comp.hp ? `<a href="${comp.hp}" target="_blank" style="color:#ff6b8b; font-weight:bold;">サイトを開く ↗</a>` : '-'}</div>
-                        <div class="mobile-detail-row"><span class="mobile-detail-label">マイページ:</span>${comp.mypageUrl ? `<a href="${comp.mypageUrl}" target="_blank" style="color:#4dadf7; font-weight:bold;">ログイン画面 ↗</a>` : '-'}</div>
-                        <div class="mobile-detail-row"><span class="mobile-detail-label">ユーザーID:</span><code>${escapeHtml(comp.mypageId || '-')}</code></div>
-                        <div class="mobile-detail-row">
-                            <span class="mobile-detail-label">ES締切:</span>${comp.esDeadline ? formatDisplayDate(comp.esDeadline) : '-'} 
-                            <label style="display:inline-flex; align-items:center; gap:4px; margin:0 0 0 10px; cursor:pointer; font-size:0.8rem; font-weight:normal;">
+                    // 【通常表示モード：タップ不要で最初から全情報1列表示】
+                    rowDiv.innerHTML = `
+                        <div class="pc-company-cell">
+                            <span class="pc-company-cell-label">企業名:</span>
+                            <strong style="font-size:1.0rem; color:#ff6b8b;">${escapeHtml(comp.name)}</strong>
+                            <div style="font-size:0.75rem; color:#868e96; margin-top:2px;">[${escapeHtml(comp.status)}]</div>
+                        </div>
+                        <div class="pc-company-cell">
+                            <span class="pc-company-cell-label">リンク・ID:</span>
+                            ${comp.hp ? `<a href="${comp.hp}" target="_blank" style="color:#ff6b8b; font-weight:bold; display:block; margin-bottom:2px;">🌐 公式HP ↗</a>` : ''}
+                            ${comp.mypageUrl ? `<a href="${comp.mypageUrl}" target="_blank" style="color:#4dadf7; font-weight:bold; display:block; margin-bottom:2px;">🔑 マイページ ↗</a>` : ''}
+                            ${comp.mypageId ? `<div style="font-size:0.75rem; color:#666;">ID: <code>${escapeHtml(comp.mypageId)}</code></div>` : ''}
+                            ${(!comp.hp && !comp.mypageUrl && !comp.mypageId) ? '<span style="color:#ccc;">-</span>' : ''}
+                        </div>
+                        <div class="pc-company-cell">
+                            <span class="pc-company-cell-label">ES締切:</span>
+                            <div>${comp.esDeadline ? formatDisplayDate(comp.esDeadline) : '<span style="color:#ccc;">未設定</span>'}</div>
+                            <label style="display:inline-flex; align-items:center; gap:4px; margin-top:4px; cursor:pointer; font-size:0.75rem;">
                                 <input type="checkbox" ${comp.esDone ? 'checked' : ''} onchange="toggleEsDone(${idx}, this.checked)" style="width:auto !important; margin:0;"> 提出完了
                             </label>
                         </div>
-                        <div class="mobile-detail-row"><span class="mobile-detail-label">次回選考:</span>${comp.interviewDate ? `[${escapeHtml(comp.nextDateType || '予定')}] ${formatDisplayDate(comp.interviewDate)}` : '-'}</div>
-                        <div class="mobile-detail-row" style="border-top:1px dashed #eee; padding-top:8px; margin-top:8px;"><span class="mobile-detail-label">メモ:</span><br><span style="color:#666; white-space:pre-wrap;">${escapeHtml(comp.memo || '-')}</span></div>
-                        <div class="mobile-detail-actions">
-                            <button class="action-btn" onclick="startInlineEdit(${idx})">この場で編集する</button>
+                        <div class="pc-company-cell">
+                            <span class="pc-company-cell-label">次回選考:</span>
+                            <div>${comp.interviewDate ? `<span style="background:#fffdbd; padding:2px 4px; border-radius:4px; font-weight:bold; font-size:0.75rem;">${escapeHtml(comp.nextDateType || '予定')}</span><br>${formatDisplayDate(comp.interviewDate)}` : '<span style="color:#ccc;">未設定</span>'}</div>
+                        </div>
+                        <div class="pc-company-cell" style="max-height:80px; overflow-y:auto; padding-right:4px;">
+                            <span class="pc-company-cell-label">メモ:</span>
+                            <span style="color:#555; white-space:pre-wrap; font-size:0.8rem;">${escapeHtml(comp.memo || '-')}</span>
+                        </div>
+                        <div class="pc-company-cell" style="text-align:right; display:flex; gap:6px; justify-content:flex-end;">
+                            <button class="action-btn" onclick="startInlineEdit(${idx})">編集</button>
                             <button class="action-btn" style="color:#fa5252;" onclick="deleteCompany(${idx})">削除</button>
                         </div>
                     `;
-                    if (document.getElementById(`mobile-detail-${idx}`)?.style.display === 'block') {
-                        detail.style.display = 'block';
-                    }
                 }
-                
-                mDiv.appendChild(trigger);
-                mDiv.appendChild(detail);
-                mobileList.appendChild(mDiv);
+                targetContainer.appendChild(rowDiv);
             });
         }
 
@@ -934,13 +948,10 @@
                     companies: window.companies,
                     userName: window.userName
                 }, { merge: true }).then(() => {
-                    renderTable();
-                    renderTodoList();
-                    document.getElementById(`mobile-detail-${index}`).style.display = 'block';
+                    renderApp();
                 });
             } else {
                 renderApp();
-                document.getElementById(`mobile-detail-${index}`).style.display = 'block';
             }
         };
 
@@ -1054,15 +1065,24 @@
         function changeTaskPage(offset) { currentTaskPage += offset; if (currentTaskPage < 1) currentTaskPage = 1; renderTodoList(); }
 
         function changeMonth(offset) { currentCalendarDate.setMonth(currentCalendarDate.getMonth() + offset); renderCalendar(); }
-        function showCalendarPopup(e, info) {
+        
+        // まるの真上に吹き出しを出すトグル処理
+        window.togglePopupInCell = function(e, cellIdx) {
             e.stopPropagation();
-            const popup = document.getElementById('calendarPopup');
-            const content = document.getElementById('calendarPopupContent');
-            if (!popup || !content) return;
-            content.innerHTML = info.replace(/\n/g, '<br>');
-            popup.style.display = 'block';
-        }
-        document.addEventListener('click', () => { const p = document.getElementById('calendarPopup'); if(p) p.style.display='none'; });
+            const allPopups = document.querySelectorAll('.calendar-popup');
+            const targetPopup = document.getElementById(`popup-${cellIdx}`);
+            
+            const alreadyOpen = targetPopup && targetPopup.style.display === 'block';
+            allPopups.forEach(p => p.style.display = 'none'); // 全部閉じる
+            
+            if (targetPopup && !alreadyOpen) {
+                targetPopup.style.display = 'block';
+            }
+        };
+        
+        document.addEventListener('click', () => { 
+            document.querySelectorAll('.calendar-popup').forEach(p => p.style.display = 'none'); 
+        });
 
         function getDotColor(status) {
             switch(status) {
@@ -1080,47 +1100,67 @@
             const grid = document.getElementById('calendarGrid');
             if (!title || !grid) return;
             grid.innerHTML = '';
+            
             const year = currentCalendarDate.getFullYear();
             const month = currentCalendarDate.getMonth();
             title.textContent = `${year}年 ${month + 1}月`;
+            
             const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
             weekdays.forEach(w => { const cell = document.createElement('div'); cell.className = 'calendar-header-cell'; cell.textContent = w; grid.appendChild(cell); });
+            
             const firstDayOfMonth = new Date(year, month, 1);
             const startOffset = firstDayOfMonth.getDay();
             const calendarStartDate = new Date(firstDayOfMonth);
             calendarStartDate.setDate(firstDayOfMonth.getDate() - startOffset);
+            
             const today = new Date();
             for (let i = 0; i < 42; i++) {
                 const currentDate = new Date(calendarStartDate);
                 currentDate.setDate(calendarStartDate.getDate() + i);
                 if (i >= 35 && currentDate.getMonth() !== month && currentDate.getDay() === 0) break;
+                
                 const cell = document.createElement('div');
                 cell.className = 'calendar-cell';
                 if (currentDate.getMonth() !== month) cell.classList.add('other-month');
                 if (currentDate.toDateString() === today.toDateString()) cell.classList.add('today');
+                
                 const dayNum = document.createElement('span');
-                dayNum.className = 'calendar-day-num'; dayNum.textContent = currentDate.getDate();
+                dayNum.className = 'calendar-day-num'; 
+                dayNum.textContent = currentDate.getDate();
                 cell.appendChild(dayNum);
+                
                 const dotsContainer = document.createElement('div');
                 dotsContainer.className = 'calendar-dots';
+                
                 let dayEvents = [];
                 const yyyy = currentDate.getFullYear();
                 const mm = String(currentDate.getMonth() + 1).padStart(2, '0');
                 const dd = String(currentDate.getDate()).padStart(2, '0');
                 const compStr = `${yyyy}-${mm}-${dd}`;
+                
                 companies.forEach(comp => {
                     if (comp.status === '不合格') return;
                     if (comp.esDeadline && !comp.esDone && comp.esDeadline.startsWith(compStr)) dayEvents.push({ text: `🎀 ES期限: ${comp.name}`, status: comp.status });
                     if (comp.interviewDate && comp.interviewDate.startsWith(compStr)) dayEvents.push({ text: `🐾 ${comp.nextDateType || '予定'}: ${comp.name}`, status: comp.status });
                 });
+                
                 if (dayEvents.length > 0) {
-                    const clickInfo = dayEvents.map(e => e.text).join('\n');
+                    const clickInfo = dayEvents.map(e => e.text).join('<br>');
+                    
                     const dot = document.createElement('span');
                     dot.className = `cal-dot`;
                     dot.style.backgroundColor = getDotColor(dayEvents[0].status || '未エントリー');
-                    dot.setAttribute('onclick', `showCalendarPopup(event, \`${clickInfo}\`)`);
+                    dot.setAttribute('onclick', `togglePopupInCell(event, ${i})`);
                     dotsContainer.appendChild(dot);
+                    
+                    // 吹き出しポップアップをセルの内部に生成（まるの真上に出すため）
+                    const popDiv = document.createElement('div');
+                    popDiv.id = `popup-${i}`;
+                    popDiv.className = 'calendar-popup';
+                    popDiv.innerHTML = clickInfo;
+                    cell.appendChild(popDiv);
                 }
+                
                 cell.appendChild(dotsContainer);
                 grid.appendChild(cell);
             }
