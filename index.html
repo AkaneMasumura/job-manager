@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>就活スケジュール管理アプリ</title>
     
-    <!-- Firebase SDK (v8形式で統一) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-    <!-- Google Fonts (丸みのある可愛いフォント) -->
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
@@ -50,7 +48,8 @@
             margin-bottom: 24px;
             box-shadow: 0 8px 16px rgba(255, 183, 197, 0.15);
             border: 2px solid var(--border-soft);
-            box-sizing: border-box;
+            box-sizing: border-box; /* 全て要素の内側に含める設定 */
+            width: 100%;
         }
         
         .header-area {
@@ -146,34 +145,25 @@
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-4px); }
         }
-        
-        /* 💻 パソコン：2分割レイアウト用の全体グリッド */
-        .main-layout-grid {
+
+        /* 💻 パソコン標準画面用のレイアウト（上段2分割用のグリッド） */
+        .pc-top-grid {
             display: grid;
-            grid-template-columns: 1.3fr 0.7fr;
+            grid-template-columns: 1.2fr 0.8fr;
             gap: 24px;
             align-items: start;
         }
-        
-        /* スマホでの入れ替え（並び替え）を行うための、左側メインエリアのフレックス化 */
-        .left-main-area {
+
+        /* アプリ全体の並び替え用ラッパー（デバイスごとに表示順を細かく制御するための設定） */
+        .flexible-layout-wrapper {
             display: flex;
             flex-direction: column;
         }
-        
-        /* 初期状態（PC）の並び順 */
-        .order-todo { order: 1; }
-        .order-add-company { order: 2; }
-        .order-company-list { order: 3; }
-        
-        /* カレンダーエリアがスクロールに追従するように設定 */
-        .sticky-side-area {
-            position: sticky;
-            top: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 0px;
-        }
+
+        /* 通常PC表示での並び順 */
+        .section-top-row { order: 1; }       /* 今週の予定とカレンダー（上段） */
+        .section-add-company { order: 2; }   /* エントリー企業の追加 */
+        .section-company-list { order: 3; }  /* 登録企業一覧 */
         
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 8px; }
         .calendar-header-cell { text-align: center; font-weight: bold; padding: 4px; background: #ffe3e8; font-size: 0.75rem; border-radius: 6px; color: #ff6b8b;}
@@ -217,12 +207,21 @@
             gap: 15px; margin-top: 10px; font-size: 0.8rem; font-weight: bold;
         }
         
-        /* 入力欄グリッド */
+        /* フォームの基本2列グリッド */
         .form-grid-two-rows {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 15px;
             margin-bottom: 15px;
+        }
+        /* 時間枠用内側カードボックス */
+        .date-time-card-box {
+            border: 2px solid var(--border-soft); 
+            padding: 12px; 
+            border-radius: 12px; 
+            background: #fffbfb;
+            box-sizing: border-box; /* 絶対にハミ出さない魔法の記述 */
+            width: 100%;
         }
         
         label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 0.85rem; color: #7c6a6e; text-align: left; }
@@ -248,13 +247,15 @@
             display:none; justify-content:center; align-items:center; z-index:9999; font-weight:bold;
         }
 
-        /* 📱 PC・スマホ共通のアコーディオンリスト用スタイル */
+        /* 企業一覧用アコーディオンボックス */
         .mobile-company-item {
             border: 2px solid var(--border-soft);
             border-radius: 12px;
             margin-bottom: 8px;
             overflow: hidden;
             background: white;
+            box-sizing: border-box;
+            width: 100%;
         }
         .mobile-company-trigger {
             padding: 14px;
@@ -280,25 +281,28 @@
             text-align: left;
             background: #fffafb;
             box-sizing: border-box;
+            width: 100%;
         }
         
-        /* 💻 パソコン編集時にボタンがスクロールせず隠れないように2列配置にするグリッド設定 */
+        /* 💻 パソコン分割編集時にスクロールを発生させない左右2列コンパクトレイアウト */
         .edit-grid-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 12px;
+            box-sizing: border-box;
+            width: 100%;
         }
         .edit-grid-full {
             grid-column: span 2;
         }
         
-        /* 詳細内インライン編集枠スタイル */
+        /* 詳細内インライン編集用入力パーツ */
         .mobile-company-detail input[type="text"],
         .mobile-company-detail input[type="date"],
         .mobile-company-detail input[type="url"],
         .mobile-company-detail select,
         .mobile-company-detail textarea {
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             padding: 8px;
             font-size: 0.85rem;
             border-radius: 8px;
@@ -309,7 +313,7 @@
         .mobile-company-detail label {
             font-size: 0.8rem;
             color: #ff6b8b;
-            margin-top: 6px;
+            margin-top: 4px;
             font-weight: bold;
         }
         
@@ -324,19 +328,21 @@
             width: 110px;
         }
         .mobile-detail-actions {
-            margin-top: 14px;
+            margin-top: 10px;
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
+            box-sizing: border-box;
+            width: 100%;
         }
         .mobile-detail-actions .action-btn {
             flex: 1;
-            padding: 8px;
+            padding: 6px;
             font-size: 0.8rem;
             text-align: center;
         }
 
-        /* 時間指定のセレクトボックス親要素 */
+        /* 時間指定セレクトボックスの横並び */
         .time-box-flex {
             display: flex;
             align-items: center;
@@ -345,23 +351,21 @@
             width: 100%;
             box-sizing: border-box;
         }
-        /* セレクトボックス単体も横いっぱいに綺麗に割り振る */
         .time-box-flex select {
             flex: 1;
             width: 100% !important;
             min-width: 0;
             display: inline-block;
+            padding: 6px !important;
         }
 
-        /* ===================================================
-           📱 スマホ専用スタイル (画面幅が768px以下のとき)
-           =================================================== */
-        @media (max-width: 768px) {
+        /* 📱 スマホ表示用、および 💻 PC画面分割時（幅が920px以下になった時）の共通レスポンシブコード */
+        @media (max-width: 920px) {
             body {
                 padding: 8px;
             }
             .card {
-                padding: 12px;
+                padding: 14px;
                 border-radius: 14px;
                 margin-bottom: 12px;
                 box-shadow: 0 4px 10px rgba(255, 183, 197, 0.1);
@@ -377,37 +381,35 @@
                 width: 100% !important;
                 box-sizing: border-box;
             }
-            .title-editable { font-size: 1.1rem; padding: 2px 6px; }
+            .title-editable { font-size: 1.2rem; padding: 2px 6px; }
             .status-badge { font-size: 0.7rem; padding: 4px 10px; border-radius: 12px; }
             .btn-cute { font-size: 0.75rem; padding: 6px 12px; border-radius: 20px; }
 
-            /* スマホ時は2分割を解除して1列にする */
-            .main-layout-grid {
+            /* PCの上段2分割構造を解除して縦1列にスタックさせる */
+            .pc-top-grid {
                 display: block;
                 width: 100%;
             }
 
-            /* 🔄 【順番入れ替え】スマホのときだけ企業一覧を今週やるべきことの下にする */
-            .order-todo { order: 1; }
-            .order-company-list { order: 2; }
-            .order-add-company { order: 3; }
+            /* 🔄 【順番並び替え制御】スマホ画面、およびPC分割時は「一覧を上、入力欄を下」にする */
+            .section-top-row { order: 1; }      /* ① カレンダー・やるべきこと（カレンダーは消さず残す！） */
+            .section-company-list { order: 2; } /* ② 登録企業一覧をここへ！ */
+            .section-add-company { order: 3; }  /* ③ 企業の追加を一番下へ！ */
 
-            /* 右側のカレンダーエリアをスマホの時だけ完全非表示に */
-            .sticky-side-area {
-                display: none !important;
-            }
-
-            /* 入力グリッドを縦1列にしてハミ出し防止 */
+            /* 入力グリッドを完全に1列化して左右のハミ出しを完全ゼロにする */
             .form-grid-two-rows {
                 grid-template-columns: 1fr; 
                 gap: 8px; 
             }
             label { font-size: 0.75rem; margin-bottom: 2px; }
-            input[type="text"], input[type="date"], input[type="url"], select, textarea {
-                padding: 6px 10px; 
-                font-size: 0.8rem; 
+            
+            /* 横幅が合っていなかった原因の入力を、box-sizing含めて100%幅に完全統一 */
+            input[type="text"], input[type="date"], input[type="url"], select, textarea, .date-time-card-box {
+                padding: 8px 10px; 
+                font-size: 0.85rem; 
                 border-radius: 8px;
                 width: 100% !important;
+                box-sizing: border-box;
             }
             textarea { height: 36px; }
 
@@ -418,9 +420,10 @@
                 margin-top: 4px;
             }
 
-            /* 📱 スマホ編集時は画面幅に合わせて縦1列に落とし込む */
+            /* 分割中やスマホ編集時は1列コンパクトにして、保存ボタンを即タップできるようにする */
             .edit-grid-container {
                 grid-template-columns: 1fr;
+                gap: 6px;
             }
             .edit-grid-full {
                 grid-column: span 1;
@@ -432,7 +435,7 @@
             .mobile-company-detail input[type="date"],
             .mobile-company-detail input[type="url"],
             .mobile-company-detail select,
-            .mobile-company-detail textarea { padding: 6px; font-size: 0.8rem; width: 100% !important;}
+            .mobile-company-detail textarea { padding: 6px; font-size: 0.8rem; width: 100% !important; box-sizing: border-box;}
             .mobile-detail-label { width: 90px; }
         }
     </style>
@@ -441,7 +444,6 @@
 
     <div class="container">
         
-        <!-- 一番上：タイトル ＆ 同期・ログイン情報 -->
         <div class="header-area">
             <div id="appTitleDisplay" class="title-editable" onclick="changeAppTitle()">読み込み中...</div>
             <div class="auth-right">
@@ -454,110 +456,105 @@
             </div>
         </div>
 
-        <!-- 💻 メインレイアウトグリッド（PC時は2分割、スマホ時は縦並び） -->
-        <div class="main-layout-grid">
+        <div class="flexible-layout-wrapper">
             
-            <!-- 左半分：各種メイン管理カードエリア（順序を可変にするためFlex構造を適用） -->
-            <div class="left-main-area">
-                
-                <!-- 今週やるべきこと -->
-                <div class="card order-todo">
-                    <h3 style="margin-top:0; color:#ff6b8b; font-size:1.0rem; margin-bottom: 12px; text-align: left;">📅 今週やるべきこと (直近7日以内)</h3>
-                    <ul id="todoList" class="todo-list"></ul>
-                    <div id="taskPagination" class="pagination-container" style="display: none;">
-                        <button onclick="changeTaskPage(-1)" class="action-btn" style="padding:2px 8px;">◀ 前</button>
-                        <span id="taskPageNum">1 / 1</span>
-                        <button onclick="changeTaskPage(1)" class="action-btn" style="padding:2px 8px;">次 ▶</button>
-                    </div>
-                </div>
-                
-                <!-- エントリー企業の追加 -->
-                <div class="card order-add-company" style="padding: 14px;">
-                    <h3 style="margin-top:0; color:#ff6b8b; font-size:0.95rem; margin-bottom:10px; text-align: left;">🏢 エントリー企業の追加</h3>
-                    <form id="companyForm">
-                        <div class="form-grid-two-rows">
-                            <div><label>企業名 *</label><input type="text" id="compName" required placeholder="マスコミ・IT・SaaSなど"></div>
-                            <div><label>HP URL</label><input type="url" id="compHp" placeholder="https://..."></div>
-                            <div><label>マイページURL</label><input type="url" id="mypageUrl" placeholder="https://..."></div>
-                            <div><label>マイページID</label><input type="text" id="mypageId"></div>
+            <div class="section-top-row">
+                <div class="pc-top-grid">
+                    
+                    <div class="card">
+                        <h3 style="margin-top:0; color:#ff6b8b; font-size:1.0rem; margin-bottom: 12px; text-align: left;">📅 今週やるべきこと (直近7日以内)</h3>
+                        <ul id="todoList" class="todo-list"></ul>
+                        <div id="taskPagination" class="pagination-container" style="display: none;">
+                            <button onclick="changeTaskPage(-1)" class="action-btn" style="padding:2px 8px;">◀ 前</button>
+                            <span id="taskPageNum">1 / 1</span>
+                            <button onclick="changeTaskPage(1)" class="action-btn" style="padding:2px 8px;">次 ▶</button>
                         </div>
-                        
-                        <div class="form-grid-two-rows" style="margin-bottom: 5px;">
-                            <div>
-                                <label>ES締切日</label>
-                                <input type="date" id="esDeadlineDate" style="width: 100%;">
-                                <label style="font-size:0.75rem; margin-top:4px; font-weight:normal; text-align: left;"><input type="checkbox" id="esHasTime" onchange="document.getElementById('esTimeContainer').style.display=this.checked?'flex':'none'"> 時間指定</label>
-                                <div id="esTimeContainer" class="time-box-flex" style="display:none;">
-                                    <select id="esHour"></select>時
-                                    <select id="esMin"></select>分
-                                    <div style="width:14px;"></div>
-                                </div>
-                            </div>
-                            <div>
-                                <label>次回の予定タイプ / 日時</label>
-                                <select id="nextDateType" style="margin-bottom:4px; width:100%;">
-                                    <option value="">(なし)</option><option value="説明会">説明会</option><option value="GD">GD</option>
-                                    <option value="テスト">テスト</option><option value="一次面接">一次面接</option><option value="二次面接">二次面接</option>
-                                    <option value="最終面接">最終面接</option><option value="インターン">インターン</option><option value="その他">その他</option>
-                                </select>
-                                <input type="date" id="interviewDateDate" style="width:100%;">
-                                <label style="font-size:0.75rem; margin-top:4px; font-weight:normal; text-align: left;"><input type="checkbox" id="interviewHasTime" onchange="document.getElementById('interviewTimeContainer').style.display=this.checked?'flex':'none'"> 時間指定</label>
-                                <div id="interviewTimeContainer" class="time-box-flex" style="display:none;">
-                                    <select id="interviewHour"></select>時
-                                    <select id="interviewMin"></select>分
-                                    <div style="width:14px;"></div>
-                                </div>
-                            </div>
-                            <div>
-                                <label>選考ステータス</label>
-                                <select id="selectionStatus">
-                                    <option value="未エントリー">未エントリー</option><option value="説明会">説明会</option><option value="ES作成中">ES作成中</option>
-                                    <option value="ES提出済み">ES提出済み</option><option value="テスト">テスト</option><option value="GD">GD</option>
-                                    <option value="一次面接">一次面接</option><option value="二次面接">二次面接</option><option value="最終面接">最終面接</option>
-                                    <option value="インターン">インターン</option><option value="結果待ち">結果待ち</option><option value="内定">内定</option>
-                                    <option value="不合格">不合格</option><option value="その他">その他</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label>メモ</label>
-                                <textarea id="memo" rows="2" style="height:36px; resize:none;" placeholder="面接の準備など"></textarea>
-                            </div>
-                        </div>
-                        <div style="text-align: right; margin-top: 4px;">
-                            <button type="submit" class="btn-cute">この企業を登録する ✨</button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- 登録企業一覧 (PC・スマホ共通アコーディオン ＆ その場でインライン編集) -->
-                <div class="card order-company-list">
-                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
-                        <h3 style="margin:0; color:#ff6b8b; font-size:1.0rem; text-align: left;">📊 登録企業一覧</h3>
-                        <input type="text" id="searchBox" placeholder="企業名で探す... 🔍" oninput="renderTable()" style="max-width:220px; padding:6px 12px; border-radius:20px; width:100%;">
                     </div>
                     
-                    <div id="companyMobileList"></div>
-                </div>
-
-            </div>
-
-            <!-- 右半分：カレンダーエリア（PC時のみ表示され、スクロールに追従） -->
-            <div class="sticky-side-area">
-                <div id="greetingMessage" class="greeting-box">こんにちは✨</div>
-                
-                <div class="card" style="padding: 16px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 5px;">
-                        <span id="calendarTitle" style="font-weight: bold; font-size:0.9rem; color:#ff6b8b;">----年 --月</span>
-                        <div>
-                            <button onclick="changeMonth(-1)" class="action-btn" style="padding:2px 6px;">◀</button>
-                            <button onclick="changeMonth(1)" class="action-btn" style="padding:2px 6px;">▶</button>
+                    <div>
+                        <div id="greetingMessage" class="greeting-box">こんにちは✨</div>
+                        <div class="card" style="padding: 16px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 5px;">
+                                <span id="calendarTitle" style="font-weight: bold; font-size:0.9rem; color:#ff6b8b;">----年 --月</span>
+                                <div>
+                                    <button onclick="changeMonth(-1)" class="action-btn" style="padding:2px 6px;">◀</button>
+                                    <button onclick="changeMonth(1)" class="action-btn" style="padding:2px 6px;">▶</button>
+                                </div>
+                            </div>
+                            <div id="calendarGrid" class="calendar-grid"></div>
+                            <div id="calendarPopup" class="calendar-popup">
+                                <div id="calendarPopupContent"></div>
+                            </div>
                         </div>
                     </div>
-                    <div id="calendarGrid" class="calendar-grid"></div>
-                    <div id="calendarPopup" class="calendar-popup">
-                        <div id="calendarPopupContent"></div>
-                    </div>
+
                 </div>
+            </div>
+            
+            <div class="card section-add-company" style="padding: 16px;">
+                <h3 style="margin-top:0; color:#ff6b8b; font-size:0.95rem; margin-bottom:10px; text-align: left;">🏢 エントリー企業の追加</h3>
+                <form id="companyForm">
+                    <div class="form-grid-two-rows">
+                        <div><label>企業名 *</label><input type="text" id="compName" required placeholder="マスコミ・IT・SaaSなど"></div>
+                        <div><label>HP URL</label><input type="url" id="compHp" placeholder="https://..."></div>
+                        <div><label>マイページURL</label><input type="url" id="mypageUrl" placeholder="https://..."></div>
+                        <div><label>マイページID</label><input type="text" id="mypageId"></div>
+                    </div>
+                    
+                    <div class="form-grid-two-rows" style="margin-bottom: 5px;">
+                        <div class="date-time-card-box">
+                            <label style="color:#ff6b8b;">ES締切日</label>
+                            <input type="date" id="esDeadlineDate">
+                            <label style="font-size:0.75rem; margin-top:4px; font-weight:normal; text-align: left;"><input type="checkbox" id="esHasTime" onchange="document.getElementById('esTimeContainer').style.display=this.checked?'flex':'none'"> 時間指定</label>
+                            <div id="esTimeContainer" class="time-box-flex" style="display:none;">
+                                <select id="esHour"></select>時
+                                <select id="esMin"></select>分
+                            </div>
+                        </div>
+                        
+                        <div class="date-time-card-box">
+                            <label style="color:#ff6b8b;">次回の予定タイプ / 日時</label>
+                            <select id="nextDateType" style="margin-bottom:4px;">
+                                <option value="">(なし)</option><option value="説明会">説明会</option><option value="GD">GD</option>
+                                <option value="テスト">テスト</option><option value="一次面接">一次面接</option><option value="二次面接">二次面接</option>
+                                <option value="最終面接">最終面接</option><option value="インターン">インターン</option><option value="その他">その他</option>
+                            </select>
+                            <input type="date" id="interviewDateDate">
+                            <label style="font-size:0.75rem; margin-top:4px; font-weight:normal; text-align: left;"><input type="checkbox" id="interviewHasTime" onchange="document.getElementById('interviewTimeContainer').style.display=this.checked?'flex':'none'"> 時間指定</label>
+                            <div id="interviewTimeContainer" class="time-box-flex" style="display:none;">
+                                <select id="interviewHour"></select>時
+                                <select id="interviewMin"></select>分
+                            </div>
+                        </div>
+
+                        <div>
+                            <label>選考ステータス</label>
+                            <select id="selectionStatus">
+                                <option value="未エントリー">未エントリー</option><option value="説明会">説明会</option><option value="ES作成中">ES作成中</option>
+                                <option value="ES提出済み">ES提出済み</option><option value="テスト">テスト</option><option value="GD">GD</option>
+                                <option value="一次面接">一次面接</option><option value="二次面接">二次面接</option><option value="最終面接">最終面接</option>
+                                <option value="インターン">インターン</option><option value="結果待ち">結果待ち</option><option value="内定">内定</option>
+                                <option value="不合格">不合格</option><option value="その他">その他</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>メモ</label>
+                            <textarea id="memo" rows="2" style="height:36px; resize:none;" placeholder="面接の準備など"></textarea>
+                        </div>
+                    </div>
+                    <div style="text-align: right; margin-top: 4px;">
+                        <button type="submit" class="btn-cute">この企業を登録する ✨</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card section-company-list">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
+                    <h3 style="margin:0; color:#ff6b8b; font-size:1.0rem; text-align: left;">📊 登録企業一覧</h3>
+                    <input type="text" id="searchBox" placeholder="企業名で探す... 🔍" oninput="renderTable()" style="max-width:220px; padding:6px 12px; border-radius:20px; width:100%;">
+                </div>
+                
+                <div id="companyMobileList"></div>
             </div>
 
         </div>
@@ -567,7 +564,7 @@
 
     <script>
         // ===================================================
-        // 【Firebase設定値】
+        // Firebase構成
         // ===================================================
         const firebaseConfig = {
             apiKey: "AIzaSyBAA9XGrLAtZ5IUD0EIOhDe_bmCrM6blpo",
@@ -759,7 +756,6 @@
         function renderTable() {
             const mobileList = document.getElementById('companyMobileList');
             if (!mobileList) return;
-            
             mobileList.innerHTML = '';
 
             const keyword = document.getElementById("searchBox")?.value.toLowerCase() || "";
@@ -804,20 +800,19 @@
                             <div><label>マイページURL</label><input type="url" id="mob_mypageUrl_${idx}" value="${escapeHtml(comp.mypageUrl || '')}"></div>
                             <div><label>マイページID</label><input type="text" id="mob_mypageId_${idx}" value="${escapeHtml(comp.mypageId || '')}"></div>
                             
-                            <div style="border: 2px solid var(--border-soft); padding: 12px; border-radius: 12px; background: white;">
+                            <div class="date-time-card-box">
                                 <label style="margin-top:0; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="mob_esDone_${idx}" ${comp.esDone ? 'checked' : ''} style="width:auto !important; margin:0;"> ES提出済み</label>
                                 <label style="margin-top:6px;">ES締切日</label>
-                                <input type="date" id="mob_esDate_${idx}" value="${esObj.date}" style="width:100% !important;">
-                                <label style="font-weight:normal; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="mob_esHasTime_${idx}" ${esObj.hasTime?'checked':''} onchange="document.getElementById('mob_esTimeBox_${idx}').style.display=this.checked?'flex':'none'" style="width:auto !important; margin:0;"> 時間指定</label>
+                                <input type="date" id="mob_esDate_${idx}" value="${esObj.date}">
+                                <label style="font-weight:normal; display:flex; align-items:center; gap:6px; margin-top:4px;"><input type="checkbox" id="mob_esHasTime_${idx}" ${esObj.hasTime?'checked':''} onchange="document.getElementById('mob_esTimeBox_${idx}').style.display=this.checked?'flex':'none'" style="width:auto !important; margin:0;"> 時間指定</label>
                                 <div id="mob_esTimeBox_${idx}" class="time-box-flex" style="display:${esObj.hasTime?'flex':'none'};">
                                     <select id="mob_esHour_${idx}">${hOpts}</select>時<select id="mob_esMin_${idx}">${mOpts}</select>分
-                                    <div style="width:10px;"></div>
                                 </div>
                             </div>
 
-                            <div style="border: 2px solid var(--border-soft); padding: 12px; border-radius: 12px; background: white;">
+                            <div class="date-time-card-box">
                                 <label style="margin-top:0;">次回選考予定</label>
-                                <select id="mob_nextDateType_${idx}" style="width:100% !important;">
+                                <select id="mob_nextDateType_${idx}">
                                     <option value="" ${comp.nextDateType===''?'selected':''}>(なし)</option>
                                     <option value="説明会" ${comp.nextDateType==='説明会'?'selected':''}>説明会</option>
                                     <option value="GD" ${comp.nextDateType==='GD'?'selected':''}>GD</option>
@@ -828,17 +823,16 @@
                                     <option value="インターン" ${comp.nextDateType==='インターン'?'selected':''}>インターン</option>
                                     <option value="その他" ${comp.nextDateType==='その他'?'selected':''}>その他</option>
                                 </select>
-                                <input type="date" id="mob_intDate_${idx}" value="${intObj.date}" style="margin-top:4px; width:100% !important;">
-                                <label style="font-weight:normal; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="mob_intHasTime_${idx}" ${intObj.hasTime?'checked':''} onchange="document.getElementById('mob_intTimeBox_${idx}').style.display=this.checked?'flex':'none'" style="width:auto !important; margin:0;"> 時間指定</label>
+                                <input type="date" id="mob_intDate_${idx}" value="${intObj.date}" style="margin-top:4px;">
+                                <label style="font-weight:normal; display:flex; align-items:center; gap:6px; margin-top:4px;"><input type="checkbox" id="mob_intHasTime_${idx}" ${intObj.hasTime?'checked':''} onchange="document.getElementById('mob_intTimeBox_${idx}').style.display=this.checked?'flex':'none'" style="width:auto !important; margin:0;"> 時間指定</label>
                                 <div id="mob_intTimeBox_${idx}" class="time-box-flex" style="display:${intObj.hasTime?'flex':'none'};">
                                     <select id="mob_intHour_${idx}">${hOpts}</select>時<select id="mob_intMin_${idx}">${mOpts}</select>分
-                                    <div style="width:10px;"></div>
                                 </div>
                             </div>
 
                             <div>
                                 <label>ステータス</label>
-                                <select id="mob_status_${idx}" style="width:100% !important;">
+                                <select id="mob_status_${idx}">
                                     <option value="未エントリー" ${comp.status==='未エントリー'?'selected':''}>未エントリー</option>
                                     <option value="説明会" ${comp.status==='説明会'?'selected':''}>説明会</option>
                                     <option value="ES作成中" ${comp.status==='ES作成中'?'selected':''}>ES作成中</option>
@@ -935,7 +929,6 @@
             };
             
             editingIndex = null;
-            updateSyncStatus("保存中... ✨", "#ffd43b");
             if (window.currentUid) {
                 db.collection("users").doc(window.currentUid).set({
                     companies: window.companies,
