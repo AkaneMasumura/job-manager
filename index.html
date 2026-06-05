@@ -79,14 +79,14 @@
         }
         @keyframes fuwafuwa { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 
-        /* PC用レイアウト */
+        /* レイアウト */
         .pc-top-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 24px; align-items: start; }
         .flexible-layout-wrapper { display: flex; flex-direction: column; }
         .section-top-row { order: 1; }
         .section-add-company { order: 2; }
         .section-company-list { order: 3; }
         
-        /* カレンダー関係 */
+        /* カレンダー */
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 8px; }
         .calendar-header-cell { text-align: center; font-weight: bold; padding: 4px; background: #ffe3e8; font-size: 0.75rem; border-radius: 6px; color: #ff6b8b;}
         .calendar-cell { background: #fff; border: 1px solid var(--border-soft); min-height: 44px; padding: 2px; position: relative; border-radius: 6px; }
@@ -143,19 +143,18 @@
         .loading-mask { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); display:none; justify-content:center; align-items:center; z-index:9999; font-weight:bold; }
 
         /* ===================================================
-           💻 PC表示時の一列全開用スタイル (指定順に左から整列)
+           💻 企業管理テーブルスタイル（横並び一列）
            =================================================== */
         .pc-company-row {
             border: 2px solid var(--border-soft); border-radius: 14px; margin-bottom: 12px;
             padding: 16px; background: white; box-sizing: border-box; width: 100%;
             display: grid;
-            grid-template-columns: 1.4fr 1.4fr 1.2fr 1.2fr 1fr 1.5fr 0.8fr; /* 指定の順番に合わせた7列構成 */
+            grid-template-columns: 1.4fr 1.4fr 1.2fr 1.2fr 1fr 1.5fr 0.8fr; /* 指定順の7列 */
             gap: 12px; align-items: center; text-align: left; font-size: 0.85rem;
         }
         .pc-company-cell { word-break: break-all; }
-        .pc-company-cell-label { display: none; } /* PCでは見出しを隠す */
+        .pc-company-cell-label { display: none; } /* PCでは項目見出しを隠す */
         
-        /* 編集フォームのコンテナ（1列まるごと使って展開） */
         .pc-edit-container {
             grid-column: span 7; display: grid; grid-template-columns: repeat(4, 1fr);
             gap: 12px; background: #fffafb; padding: 14px; border-radius: 12px; box-sizing: border-box;
@@ -163,9 +162,6 @@
         .pc-edit-full { grid-column: span 4; display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }
         .time-box-flex { display: flex; align-items: center; gap: 4px; margin-top: 4px; width: 100%; box-sizing: border-box; }
         .time-box-flex select { flex: 1; width: 100% !important; min-width: 0; padding: 6px !important; }
-
-        /* スマホ用のアコーディオン展開ヘッダー */
-        .mobile-toggle-header { display: none; }
 
         /* ===================================================
            📱 スマホ・PC分割画面表示時 (横幅920px以下)
@@ -178,10 +174,10 @@
             .status-badge { font-size: 0.7rem; padding: 4px 10px; border-radius: 12px; }
             .btn-cute { font-size: 0.75rem; padding: 6px 12px; border-radius: 20px; }
 
-            /* カレンダーセクションを完全に非表示 */
+            /* カレンダーセクションを非表示 */
             .section-top-row { display: none !important; }
 
-            /* 一覧を上、追加欄を下に固定 */
+            /* 一覧を上、追加欄を下に配置 */
             .flexible-layout-wrapper { display: flex; flex-direction: column; }
             .section-company-list { order: 1; } 
             .section-add-company { order: 2; }  
@@ -189,7 +185,6 @@
             .form-grid-two-rows { grid-template-columns: 1fr; gap: 10px; }
             label { font-size: 0.75rem; margin-bottom: 2px; }
             
-            /* 日時選択の幅をURL/IDの幅と完全に一致させる設定 */
             .date-time-card-box {
                 padding: 10px; border-radius: 12px; border: 2px solid var(--border-soft);
                 background-color: #fffafb; width: 100% !important; box-sizing: border-box;
@@ -200,35 +195,12 @@
             textarea { height: 38px; }
             #companyForm button[type="submit"] { width: 100%; padding: 10px; font-size: 0.85rem; }
 
-            /* 📱 スマホ用：一覧を「企業名のみ」のタップ展開式アコーディオンにする */
-            .pc-company-row {
-                display: block; padding: 0; border-radius: 12px; margin-bottom: 10px;
-                width: 100% !important; box-sizing: border-box; overflow: hidden;
-            }
-            
-            /* スマホで最初に見える企業名だけのヘッダー部分 */
-            .mobile-toggle-header {
-                display: flex; justify-content: space-between; align-items: center;
-                padding: 14px; cursor: pointer; font-weight: bold; font-size: 1.0rem;
-                color: var(--text-dark); background: transparent;
-            }
-            .mobile-toggle-icon { font-size: 0.8rem; color: #ff6b8b; transition: transform 0.2s; }
-            
-            /* タップされた時だけ表示される中身のコンテナ */
-            .mobile-detail-content {
-                display: none; padding: 0 14px 14px 14px; border-top: 1px dashed var(--border-soft);
-                background: rgba(255, 255, 255, 0.6);
-            }
-            
-            /* 開いている時はアイコンを下向きにする用 */
-            .pc-company-row.is-open .mobile-toggle-icon { transform: rotate(90deg); }
-            .pc-company-row.is-open .mobile-detail-content { display: block; }
-
-            /* 詳細内の各セル縦並び */
-            .pc-company-cell { margin-top: 10px; margin-bottom: 0; word-break: break-all; }
+            /* スマホで縦並びカードに変形 */
+            .pc-company-row { display: block; padding: 14px; border-radius: 12px; margin-bottom: 10px; width: 100% !important; box-sizing: border-box; }
+            .pc-company-cell { margin-bottom: 10px; }
+            .pc-company-cell:last-child { margin-bottom: 0; }
             .pc-company-cell-label { display: block; font-weight: bold; color: #ff6b8b; font-size: 0.75rem; margin-bottom: 2px; }
             
-            /* スマホ用インラインその場編集フォーム */
             .pc-edit-container { grid-template-columns: 1fr; gap: 8px; padding: 10px; grid-column: span 1; }
             .pc-edit-full { grid-column: span 1; flex-direction: column; gap: 6px; }
             .pc-edit-container .date-time-card-box { width: 100% !important; box-sizing: border-box; }
@@ -367,7 +339,6 @@
         window.userName = "ユーザー";
         window.currentUid = null;
         let editingIndex = null;
-        let openMobileIndex = null; // スマホ表示でどのアコーディオンが開いているか管理する変数
         let currentCalendarDate = new Date();
         let unsubscribeRealtime = null;
 
@@ -525,18 +496,8 @@
             }
         }
 
-        // スマホでのトグル開閉処理
-        window.toggleMobileRow = function(index) {
-            if (openMobileIndex === index) {
-                openMobileIndex = null;
-            } else {
-                openMobileIndex = index;
-            }
-            renderTable();
-        };
-
         // ===================================================
-        // 📊 登録企業一覧の描画 (新・並び順＆スマホ個別対応版)
+        // 📊 登録企業一覧の描画 (指定並び順テーブル形式)
         // ===================================================
         function renderTable() {
             const targetContainer = document.getElementById('companyMobileList');
@@ -559,15 +520,8 @@
                 const bgClass = getStatusColorClass(comp.status);
                 rowDiv.className = `pc-company-row ${bgClass}`;
                 
-                // 開いているかどうかのクラス（スマホ用）
-                if (openMobileIndex === idx) {
-                    rowDiv.classList.add('is-open');
-                }
-                
                 if (editingIndex === idx) {
-                    // ----------------------------------
                     // 🛠️ 【その場編集モード】
-                    // ----------------------------------
                     const esObj = parseDateTimeString(comp.esDeadline);
                     const intObj = parseDateTimeString(comp.interviewDate);
                     
@@ -642,27 +596,15 @@
                     if(esObj.hasTime){ document.getElementById(`mob_esHour_${idx}`).value = esObj.hour; document.getElementById(`mob_esMin_${idx}`).value = esObj.min; }
                     if(intObj.hasTime){ document.getElementById(`mob_intHour_${idx}`).value = intObj.hour; document.getElementById(`mob_intMin_${idx}`).value = intObj.min; }
                 } else {
-                    // ----------------------------------
                     // 👀 【通常表示モード：ご指定の順番通り】
-                    // ----------------------------------
-                    
-                    // スマホ表示用のヘッダー（タップで開閉）
-                    const mobileHeaderHtml = `
-                        <div class="mobile-toggle-header" onclick="toggleMobileRow(${idx})">
-                            <span>🏢 ${escapeHtml(comp.name)}</span>
-                            <span class="mobile-toggle-icon">▶</span>
-                        </div>
-                    `;
-                    
-                    // 共通セル情報（指定の順番通り）
-                    const cellsHtml = `
+                    rowDiv.innerHTML = `
                         <div class="pc-company-cell">
                             <span class="pc-company-cell-label">企業名:</span>
                             ${comp.hp ? `<a href="${comp.hp}" target="_blank" style="color:#ff6b8b; font-weight:bold; font-size:1.0rem; text-decoration: underline;">${escapeHtml(comp.name)} ↗</a>` : `<strong style="font-size:1.0rem; color:#ff6b8b;">${escapeHtml(comp.name)}</strong>`}
                         </div>
                         
                         <div class="pc-company-cell">
-                            <span class="pc-company-cell-label">マイページ / ID:</span>
+                            <span class="pc-company-cell-label">マイページ:</span>
                             ${comp.mypageUrl ? `<a href="${comp.mypageUrl}" target="_blank" style="color:#4dadf7; font-weight:bold; display:block;">🔑 マイページ ↗</a>` : '<span style="color:#ccc;">URL未設定</span>'}
                             <div style="font-size:0.75rem; color:#666; margin-top:4px;">ID: <code>${escapeHtml(comp.mypageId) || '-'}</code></div>
                         </div>
@@ -691,17 +633,9 @@
                             <span style="color:#555; white-space:pre-wrap; font-size:0.8rem;">${escapeHtml(comp.memo || '-')}</span>
                         </div>
                         
-                        <div class="pc-company-cell" style="text-align:right; display:flex; gap:6px; justify-content:flex-end; margin-top:10px; border-top:1px dashed #fecdd3; padding-top:8px; grid-column: span 1;">
+                        <div class="pc-company-cell" style="text-align:right; display:flex; gap:6px; justify-content:flex-end;">
                             <button class="action-btn" onclick="startInlineEdit(${idx})">この場で編集する 📝</button>
                             <button class="action-btn" style="color:#fa5252;" onclick="deleteCompany(${idx})">削除</button>
-                        </div>
-                    `;
-                    
-                    // 出力アセンブル（PCではそのまま、スマホではトグル内に包む）
-                    rowDiv.innerHTML = `
-                        ${mobileHeaderHtml}
-                        <div class="mobile-detail-content">
-                            ${cellsHtml}
                         </div>
                     `;
                 }
