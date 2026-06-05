@@ -292,7 +292,13 @@
             </div>
         </form>
     </div>
-
+<input
+  type="text"
+  id="searchBox"
+  placeholder="企業名で検索..."
+  oninput="renderTable()"
+  style="margin-bottom:10px;padding:8px;width:250px;"
+>
     <div class="table-container">
         <table>
             <thead>
@@ -515,11 +521,19 @@ const auth = firebase.auth();
         function renderTable() {
             const tbody = document.getElementById('companyTableBody');
             tbody.innerHTML = '';
+
+            const keyword =
+document.getElementById("searchBox")?.value.toLowerCase() || "";
             
             const indexedCompanies = companies.map((comp, idx) => ({ comp, idx }));
             indexedCompanies.sort((a, b) => a.comp.name.localeCompare(b.comp.name, 'ja'));
 
-            indexedCompanies.forEach(({ comp, idx }) => {
+            const filteredCompanies = indexedCompanies.filter(
+    ({ comp }) =>
+        comp.name.toLowerCase().includes(keyword)
+);
+
+            filteredCompanies.forEach(({ comp, idx }) => {
                 const tr = document.createElement('tr');
 
                 if (editingIndex === idx) {
