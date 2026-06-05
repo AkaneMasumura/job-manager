@@ -126,18 +126,18 @@
             border: 1px solid #dee2e6;
         }
         
-        /* 改行が入っても枠にきれいに収まる一言メッセージのスタイル */
+        /* 一言メッセージのスタイル */
         .greeting-box {
             background: linear-gradient(135deg, #fff0f3 0%, #ffe3e8 100%);
             border: 2px dotted #ff85a2;
             padding: 12px 14px;
             text-align: center;
-            font-size: clamp(0.75rem, 3vw, 1rem); /* 2行でもはみ出さない大きさに調整 */
+            font-size: clamp(0.85rem, 3.5vw, 1rem); 
             font-weight: bold;
             border-radius: 16px;
             margin-bottom: 15px;
             color: #de5c78;
-            line-height: 1.4; /* 改行の行間を少しキュッと詰めてスマートに */
+            line-height: 1.4;
             overflow: hidden;
             animation: fuwafuwa 3s infinite ease-in-out;
         }
@@ -205,11 +205,6 @@
             gap: 15px;
             margin-bottom: 15px;
         }
-        @media (max-width: 768px) {
-            .form-grid-two-rows {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
         
         label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 0.85rem; color: #7c6a6e; }
         input[type="text"], input[type="date"], input[type="url"], select, textarea {
@@ -238,6 +233,68 @@
         .loading-mask {
             position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8);
             display:none; justify-content:center; align-items:center; z-index:9999; font-weight:bold;
+        }
+
+        /* ===================================================
+           📱 スマホ専用スタイル (画面幅が768px以下のとき)
+           =================================================== */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px; /* 全体の余白を狭めて画面を広く使う */
+            }
+            .card {
+                padding: 16px; /* カード内の余白をスマートに */
+                border-radius: 16px;
+                margin-bottom: 16px;
+            }
+            .header-area {
+                flex-direction: column; /* タイトルとログインボタンを縦並びに */
+                align-items: center;
+                text-align: center;
+                padding: 12px;
+            }
+            .title-editable {
+                font-size: 1.5rem; /* タイトルを少し小さく */
+            }
+            .auth-right {
+                align-items: center; /* 右寄せだったものを中央寄せに */
+            }
+            
+            /* タスクとカレンダーを縦並びにして、横幅いっぱいに広げる */
+            .task-half, .cal-half {
+                flex: none;
+                width: 100%;
+                min-width: 100%;
+            }
+            
+            /* スマホ用カレンダーの高さ調整（窮屈感をなくす） */
+            .calendar-cell {
+                min-height: 48px;
+            }
+
+            /* フォーム入力欄を2行・4行から「1列」にスッキリ統一 */
+            .form-grid-two-rows {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            /* スマホでボタンを押しやすく少しだけ大きく */
+            .btn-cute {
+                width: 100%; /* 登録ボタンなどを押しやすいよう全幅に */
+                padding: 12px;
+            }
+            
+            /* テーブルが横スクロールできることを分かりやすく外枠を調整 */
+            .table-responsive {
+                border-color: #ffb7c5;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            /* テーブル内のインライン編集入力欄が潰れないようにスマホ用の最低幅を設定 */
+            .inline-input {
+                width: 100% !important;
+                box-sizing: border-box;
+            }
         }
     </style>
 </head>
@@ -274,9 +331,8 @@
                 </div>
             </div>
             
-            <!-- 右：カレンダー（上部に改行対応一言メッセージ） -->
+            <!-- 右：カレンダー -->
             <div class="card cal-half">
-                <!-- ここに新しく指定されたメッセージが改行されて入るよ -->
                 <div id="greetingMessage" class="greeting-box">こんにちは✨</div>
                 
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 5px;">
@@ -353,7 +409,7 @@
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
                 <h3 style="margin:0; color:#ff6b8b; font-size:1.1rem;">📊 登録企業一覧</h3>
-                <input type="text" id="searchBox" placeholder="企業名で探す... 🔍" oninput="renderTable()" style="max-width:220px; padding:6px 12px; border-radius:20px;">
+                <input type="text" id="searchBox" placeholder="企業名で探す... 🔍" oninput="renderTable()" style="max-width:220px; padding:6px 12px; border-radius:20px; width:100%;">
             </div>
             <div class="table-responsive">
                 <table>
@@ -410,31 +466,24 @@
             });
         })();
 
-        // 【修正】ご指定いただいた通りの時間条件・改行（innerHTML）で一言を設定する関数
         function updateGreetingMessage() {
             const now = new Date();
             const hour = now.getHours();
             const min = now.getMinutes();
             
-            // 時間と分を合算して比較しやすい数値にする (例: 10:01 -> 10 + 1/60 = 10.0166)
             const timeVal = hour + (min / 60);
             let msg = "";
 
             if (timeVal >= 5.0 && timeVal <= 10.0) {
-                // 5:00 ~ 10:00
                 msg = "おはよん！<br>今日も１日がんばろう😽✨";
             } else if (timeVal > 10.0 && timeVal <= 17.0) {
-                // 10:01 ~ 17:00
                 msg = "やっほ〜！<br>今日はなにするの😳💡";
             } else if (timeVal > 17.0 && timeVal <= 23.999) {
-                // 17:01 ~ 23:59
                 msg = "今日も１日おつかれさま😌🥂";
             } else {
-                // 00:00 ~ 4:59
                 msg = "もう明日になったよ！<br>がんばりすぎないでね😴🌙";
             }
             
-            // 改行タグを有効にするため innerHTML で流し込む
             document.getElementById('greetingMessage').innerHTML = msg;
         }
         setInterval(updateGreetingMessage, 60000);
@@ -598,22 +647,22 @@
                     for(let i=0;i<60;i+=5) { let v=String(i).padStart(2,'0'); mOpts+=`<option value="${v}">${v}</option>`; }
 
                     tr.innerHTML = `
-                        <td><input type="text" id="inline_name_${idx}" class="inline-input" style="width:100px;" value="${escapeHtml(comp.name)}" required></td>
-                        <td><input type="url" id="inline_hp_${idx}" class="inline-input" style="width:80px;" value="${escapeHtml(comp.hp)}" placeholder="HP"></td>
+                        <td><input type="text" id="inline_name_${idx}" class="inline-input" style="min-width:110px;" value="${escapeHtml(comp.name)}" required></td>
+                        <td><input type="url" id="inline_hp_${idx}" class="inline-input" style="min-width:90px;" value="${escapeHtml(comp.hp)}" placeholder="HP"></td>
                         <td>
-                            <input type="url" id="inline_mypageUrl_${idx}" class="inline-input" style="width:80px;" value="${escapeHtml(comp.mypageUrl)}" placeholder="URL"><br>
-                            <input type="text" id="inline_mypageId_${idx}" class="inline-input" style="width:80px; margin-top:2px;" value="${escapeHtml(comp.mypageId)}" placeholder="ID">
+                            <input type="url" id="inline_mypageUrl_${idx}" class="inline-input" style="min-width:90px;" value="${escapeHtml(comp.mypageUrl)}" placeholder="URL"><br>
+                            <input type="text" id="inline_mypageId_${idx}" class="inline-input" style="min-width:90px; margin-top:2px;" value="${escapeHtml(comp.mypageId)}" placeholder="ID">
                         </td>
                         <td>
                             <label style="font-size:0.75rem;"><input type="checkbox" id="inline_esDone_${idx}" ${comp.esDone ? 'checked' : ''}> 提出済</label>
-                            <input type="date" id="inline_esDate_${idx}" class="inline-input" style="width:110px; margin-top:2px;" value="${esObj.date}">
+                            <input type="date" id="inline_esDate_${idx}" class="inline-input" style="min-width:120px; margin-top:2px;" value="${esObj.date}">
                             <label style="font-size:0.7rem;"><input type="checkbox" id="inline_esHasTime_${idx}" ${esObj.hasTime?'checked':''}> 時間指定</label>
                             <div id="inline_esTime_${idx}" style="display:flex; gap:2px; align-items:center;">
                                 <select id="inline_esHour_${idx}">${hOpts}</select>:<select id="inline_esMin_${idx}">${mOpts}</select>
                             </div>
                         </td>
                         <td>
-                            <select id="inline_nextDateType_${idx}" style="width:80px; padding:2px;">
+                            <select id="inline_nextDateType_${idx}" style="min-width:90px; padding:2px;">
                                 <option value="" ${comp.nextDateType===''?'selected':''}>(なし)</option>
                                 <option value="説明会" ${comp.nextDateType==='説明会'?'selected':''}>説明会</option>
                                 <option value="GD" ${comp.nextDateType==='GD'?'selected':''}>GD</option>
@@ -624,14 +673,14 @@
                                 <option value="インターン" ${comp.nextDateType==='インターン'?'selected':''}>インターン</option>
                                 <option value="その他" ${comp.nextDateType==='その他'?'selected':''}>その他</option>
                             </select>
-                            <input type="date" id="inline_intDate_${idx}" class="inline-input" style="width:110px; margin-top:2px;" value="${intObj.date}">
+                            <input type="date" id="inline_intDate_${idx}" class="inline-input" style="min-width:120px; margin-top:2px;" value="${intObj.date}">
                             <label style="font-size:0.7rem;"><input type="checkbox" id="inline_intHasTime_${idx}" ${intObj.hasTime?'checked':''}> 時間指定</label>
                             <div id="inline_intTime_${idx}" style="display:flex; gap:2px; align-items:center;">
                                 <select id="inline_intHour_${idx}">${hOpts}</select>:<select id="inline_intMin_${idx}">${mOpts}</select>
                             </div>
                         </td>
                         <td>
-                            <select id="inline_status_${idx}" style="width:90px; padding:2px;">
+                            <select id="inline_status_${idx}" style="min-width:100px; padding:2px;">
                                 <option value="未エントリー" ${comp.status==='未エントリー'?'selected':''}>未エントリー</option>
                                 <option value="説明会" ${comp.status==='説明会'?'selected':''}>説明会</option>
                                 <option value="ES作成中" ${comp.status==='ES作成中'?'selected':''}>ES作成中</option>
@@ -648,10 +697,10 @@
                                 <option value="その他" ${comp.status==='その他'?'selected':''}>その他</option>
                             </select>
                         </td>
-                        <td><input type="text" id="inline_memo_${idx}" class="inline-input" style="width:100px;" value="${escapeHtml(comp.memo || '')}"></td>
+                        <td><input type="text" id="inline_memo_${idx}" class="inline-input" style="min-width:120px;" value="${escapeHtml(comp.memo || '')}"></td>
                         <td>
                             <button class="action-btn" style="background:#ffb7c5; color:white; border:none;" onclick="saveInlineEdit(${idx})">保存</button>
-                            <button class="action-btn" onclick="cancelInlineEdit()">取消</button>
+                            <button class="action-btn" onclick="cancelInlineEdit()" style="margin-top:4px;">取消</button>
                         </td>
                     `;
                     if(esObj.hasTime){ document.getElementById(`inline_esHour_${idx}`).value = esObj.hour; document.getElementById(`inline_esMin_${idx}`).value = esObj.min; }
@@ -680,10 +729,10 @@
                         </td>
                         <td>${nextDateDisplay}</td>
                         <td><span style="font-weight:bold;">${escapeHtml(comp.status || '未エントリー')}</span></td>
-                        <td style="white-space: pre-wrap; font-size:0.8rem;">${escapeHtml(comp.memo || '-')}</td>
+                        <td style="white-space: pre-wrap; font-size:0.8rem; min-width:120px;">${escapeHtml(comp.memo || '-')}</td>
                         <td>
                             <button class="action-btn" onclick="startInlineEdit(${idx})">編集</button>
-                            <button class="action-btn" style="background:#f1f3f5; color:#fa5252;" onclick="deleteCompany(${idx})">削除</button>
+                            <button class="action-btn" style="background:#f1f3f5; color:#fa5252; margin-top:4px;" onclick="deleteCompany(${idx})">削除</button>
                         </td>
                     `;
                 }
