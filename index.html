@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>就活スケジュール管理アプリ</title>
     
+    <!-- Firebase SDK (v8形式で統一) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
+    <!-- Google Fonts (丸みのある可愛いフォント) -->
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
@@ -124,13 +126,13 @@
             border: 1px solid #dee2e6;
         }
         
-        /* 改行なし・一行表示の一言メッセージ */
+        /* 改行なし・幅に合わせて自動調整される一言メッセージ */
         .greeting-box {
             background: linear-gradient(135deg, #fff0f3 0%, #ffe3e8 100%);
             border: 2px dotted #ff85a2;
             padding: 14px;
             text-align: center;
-            font-size: 1.05rem;
+            font-size: clamp(0.75rem, 3.2vw, 1.05rem); /* 画面幅や文字数に合わせて収まる魔法の記述 */
             font-weight: bold;
             border-radius: 16px;
             margin-bottom: 15px;
@@ -191,13 +193,26 @@
         .btn-task-done { background: #40c057; color: white; }
         .btn-task-yet { background: #adb5bd; color: white; }
 
-        /* ページネーション用の可愛いコントロール */
+        /* ページネーション用のコントロール */
         .pagination-container {
             display: flex; justify-content: center; align-items: center;
             gap: 15px; margin-top: 10px; font-size: 0.8rem; font-weight: bold;
         }
         
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px; }
+        /* 企業の追加欄をきれいに二行に収めるグリッド設定 */
+        .form-grid-two-rows {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        /* 画面が狭いときは崩れないように自動調整 */
+        @media (max-width: 768px) {
+            .form-grid-two-rows {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
         label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 0.85rem; color: #7c6a6e; }
         input[type="text"], input[type="date"], input[type="url"], select, textarea {
             width: 100%; padding: 10px; border: 2px solid var(--border-soft);
@@ -232,6 +247,7 @@
 
     <div class="container">
         
+        <!-- 一番上：タイトル ＆ 同期・ログイン情報 -->
         <div class="header-area">
             <div id="appTitleDisplay" class="title-editable" onclick="changeAppTitle()">読み込み中...</div>
             <div class="auth-right">
@@ -244,13 +260,16 @@
             </div>
         </div>
 
+        <!-- 真ん中：今週のタスク ＆ 右側に小さめカレンダー -->
         <div class="flex-row-box">
             
+            <!-- 左：今週やるべきこと (1ページ5件まで) -->
             <div class="card task-half">
                 <div>
                     <h3 style="margin-top:0; color:#ff6b8b; font-size:1.1rem; margin-bottom: 12px;">📅 今週やるべきこと (直近7日以内)</h3>
                     <ul id="todoList" class="todo-list"></ul>
                 </div>
+                <!-- 5個ずつのページ切り替えボタン -->
                 <div id="taskPagination" class="pagination-container" style="display: none;">
                     <button onclick="changeTaskPage(-1)" class="action-btn" style="padding:2px 8px;">◀ 前</button>
                     <span id="taskPageNum">1 / 1</span>
@@ -258,7 +277,9 @@
                 </div>
             </div>
             
+            <!-- 右：カレンダー（上部に時間帯一言メッセージ付き） -->
             <div class="card cal-half">
+                <!-- 枠の幅に自動で収まる一言メッセージ -->
                 <div id="greetingMessage" class="greeting-box">こんにちは✨</div>
                 
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 5px;">
@@ -275,38 +296,41 @@
             </div>
         </div>
 
+        <!-- その下：企業の追加欄 (2行に綺麗に収まる配置) -->
         <div class="card">
-            <h3 style="margin-top:0; color:#ff6b8b; font-size:1.1rem;">🏢 エントリー企業の追加</h3>
+            <h3 style="margin-top:0; color:#ff6b8b; font-size:1.1rem; margin-bottom:15px;">🏢 エントリー企業の追加</h3>
             <form id="companyForm">
-                <div class="form-grid">
+                <!-- 1行目 (4つ並び) -->
+                <div class="form-grid-two-rows">
                     <div><label>企業名 *</label><input type="text" id="compName" required placeholder="マスコミ・IT・SaaSなど"></div>
                     <div><label>HP URL</label><input type="url" id="compHp" placeholder="https://..."></div>
                     <div><label>マイページURL</label><input type="url" id="mypageUrl" placeholder="https://..."></div>
                     <div><label>マイページID</label><input type="text" id="mypageId"></div>
                 </div>
-                <div class="form-grid">
+                
+                <!-- 2行目 (4つ並び、メモも横長に綺麗に配置) -->
+                <div class="form-grid-two-rows">
                     <div>
                         <label>ES締切日</label>
                         <input type="date" id="esDeadlineDate">
-                        <label style="font-size:0.75rem; margin-top:4px; font-weight:normal;"><input type="checkbox" id="esHasTime" onchange="document.getElementById('esTimeContainer').style.display=this.checked?'flex':'none'"> 時間指定あり</label>
+                        <label style="font-size:0.75rem; margin-top:4px; font-weight:normal;"><input type="checkbox" id="esHasTime" onchange="document.getElementById('esTimeContainer').style.display=this.checked?'flex':'none'"> 時間指定</label>
                         <div id="esTimeContainer" style="display:none; gap:5px; align-items:center; margin-top:4px;">
-                            <select id="esHour" style="width:55px; padding:4px;"></select>時
-                            <select id="esMin" style="width:55px; padding:4px;"></select>分
+                            <select id="esHour" style="width:50px; padding:4px;"></select>時
+                            <select id="esMin" style="width:50px; padding:4px;"></select>分
                         </div>
                     </div>
                     <div>
-                        <label>次回の予定タイプ</label>
-                        <select id="nextDateType">
+                        <label>次回の予定タイプ / 日時</label>
+                        <select id="nextDateType" style="margin-bottom:4px;">
                             <option value="">(なし)</option><option value="説明会">説明会</option><option value="GD">GD</option>
                             <option value="テスト">テスト</option><option value="一次面接">一次面接</option><option value="二次面接">二次面接</option>
                             <option value="最終面接">最終面接</option><option value="インターン">インターン</option><option value="その他">その他</option>
                         </select>
-                        <label style="margin-top:5px;">予定日時</label>
                         <input type="date" id="interviewDateDate">
-                        <label style="font-size:0.75rem; margin-top:4px; font-weight:normal;"><input type="checkbox" id="interviewHasTime" onchange="document.getElementById('interviewTimeContainer').style.display=this.checked?'flex':'none'"> 時間指定あり</label>
+                        <label style="font-size:0.75rem; margin-top:4px; font-weight:normal;"><input type="checkbox" id="interviewHasTime" onchange="document.getElementById('interviewTimeContainer').style.display=this.checked?'flex':'none'"> 時間指定</label>
                         <div id="interviewTimeContainer" style="display:none; gap:5px; align-items:center; margin-top:4px;">
-                            <select id="interviewHour" style="width:55px; padding:4px;"></select>時
-                            <select id="interviewMin" style="width:55px; padding:4px;"></select>分
+                            <select id="interviewHour" style="width:50px; padding:4px;"></select>時
+                            <select id="interviewMin" style="width:50px; padding:4px;"></select>分
                         </div>
                     </div>
                     <div>
@@ -319,12 +343,18 @@
                             <option value="不合格">不合格</option><option value="その他">その他</option>
                         </select>
                     </div>
+                    <div>
+                        <label>メモ</label>
+                        <textarea id="memo" rows="2" style="height:42px; resize:none;" placeholder="面接の準備など"></textarea>
+                    </div>
                 </div>
-                <div class="form-group" style="margin-bottom:15px;"><label>メモ</label><textarea id="memo" rows="2" placeholder="面接の感想や次回の準備など"></textarea></div>
-                <button type="submit" class="btn-cute">この企業を登録する ✨</button>
+                <div style="text-align: right; margin-top: 10px;">
+                    <button type="submit" class="btn-cute">この企業を登録する ✨</button>
+                </div>
             </form>
         </div>
 
+        <!-- 一番下：企業名（一覧テーブル） -->
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
                 <h3 style="margin:0; color:#ff6b8b; font-size:1.1rem;">📊 登録企業一覧</h3>
@@ -347,7 +377,7 @@
 
     <script>
         // ===================================================
-        // 【Firebase設定値（反映済み）】
+        // 【Firebase設定値】
         // ===================================================
         const firebaseConfig = {
             apiKey: "AIzaSyBAA9XGrLAtZ5IUD0EIOhDe_bmCrM6blpo",
@@ -369,11 +399,10 @@
         let currentCalendarDate = new Date();
         let unsubscribeRealtime = null;
 
-        // タスクリスト用ページネーション変数
+        // 【修正】今週やるべきことは1ページに5個までに変更
         let currentTaskPage = 1;
-        const tasksPerPage = 6;
+        const tasksPerPage = 5;
 
-        // セレクトボックス初期化
         (function initTimeSelects() {
             const hSelects = ['esHour', 'interviewHour'];
             const mSelects = ['esMin', 'interviewMin'];
@@ -387,7 +416,6 @@
             });
         })();
 
-        // ご指定の一言メッセージ（一行固定）
         function updateGreetingMessage() {
             const now = new Date();
             const hour = now.getHours();
@@ -434,7 +462,7 @@
         }
 
         async function logout() {
-            if (!confirm("ログアウトする？データは安全にクラウドに残るよ！")) return;
+            if (!confirm("ログアウトする？データはクラウドに残るよ！")) return;
             showLoading(true, "ログアウト中...");
             try {
                 if (unsubscribeRealtime) { unsubscribeRealtime(); unsubscribeRealtime = null; }
@@ -461,7 +489,7 @@
                 }
                 document.getElementById('appTitleDisplay').textContent = `${window.userName}の就活`;
                 renderApp();
-                updateSyncStatus("同期済み ✨", "#2b8a3e"); // 💕から✨に変更
+                updateSyncStatus("同期済み ✨", "#2b8a3e");
                 showLoading(false);
             }, (error) => {
                 updateSyncStatus("同期エラー 😿", "#fa5252");
@@ -490,7 +518,7 @@
             const emailEl = document.getElementById('userEmailDisplay');
             if (user) {
                 window.currentUid = user.uid;
-                if (emailEl) emailEl.textContent = user.displayName || user.email || ""; // アカウント名を表示
+                if (emailEl) emailEl.textContent = user.displayName || user.email || "";
                 document.getElementById('btnGoogleLogin').style.display = 'none';
                 document.getElementById('btnGoogleLogout').style.display = 'inline-block';
                 startRealtimeSync(user.uid);
@@ -698,7 +726,7 @@
                 interviewDate: finalIntStr,
                 status: statusVal,
                 memo: document.getElementById(`inline_memo_${index}`).value.trim(),
-                taskCompleted: companies[index].taskCompleted || false // 完了状態を引き継ぐ
+                taskCompleted: companies[index].taskCompleted || false
             };
 
             editingIndex = null;
@@ -713,7 +741,7 @@
         }
 
         // ===================================================
-        // 完了ロジック ＆ 1ページ最大6件制限のタスクリスト
+        // 完了ロジック ＆ タスクリスト
         // ===================================================
         function renderTodoList() {
             const todoList = document.getElementById('todoList');
@@ -730,7 +758,6 @@
             companies.forEach((comp, originalIdx) => {
                 if (comp.status === '不合格') return;
 
-                // 1. ES締め切りタスク (完了ボタンを押していないものだけ)
                 if (comp.esDeadline && !comp.esDone && !comp.esTaskCompleted) {
                     const cleanStr = comp.esDeadline.includes(" ") ? comp.esDeadline.replace(/-/g, "/") : comp.esDeadline.replace(/-/g, "/") + " 00:00";
                     const esDate = new Date(cleanStr);
@@ -742,7 +769,6 @@
                         });
                     }
                 }
-                // 2. 選考日程タスク (完了ボタンを押していないものだけ)
                 if (comp.interviewDate && !comp.interviewTaskCompleted) {
                     const cleanStr = comp.interviewDate.includes(" ") ? comp.interviewDate.replace(/-/g, "/") : comp.interviewDate.replace(/-/g, "/") + " 00:00";
                     const intDate = new Date(cleanStr);
@@ -757,19 +783,17 @@
                 }
             });
 
-            // 締め切り順にソート
             allTasks.sort((a, b) => a.date - b.date);
 
-            // ページネーション計算 (1ページに最大6件)
             const totalTasks = allTasks.length;
             const totalPages = Math.ceil(totalTasks / tasksPerPage) || 1;
             
-            // 削除等で現在のページにデータが無くなったら前のページに戻す調整
             if (currentTaskPage > totalPages) { currentTaskPage = totalPages; }
 
             const pagContainer = document.getElementById('taskPagination');
             const pageNumSpan = document.getElementById('taskPageNum');
             
+            // 【修正】1ページに最大5件でページ表示切り替え
             if (totalTasks > tasksPerPage) {
                 pagContainer.style.display = 'flex';
                 pageNumSpan.textContent = `${currentTaskPage} / ${totalPages}`;
@@ -786,12 +810,10 @@
                 li.style.borderColor = task.color;
                 li.style.backgroundColor = task.bg;
                 
-                // タスク情報のHTML
                 const infoDiv = document.createElement('div');
                 infoDiv.innerHTML = task.html;
                 li.appendChild(infoDiv);
 
-                // クリックされたら開く「完了/まだ」のボタンエリア
                 const actionId = `task-action-${startIndex + pageIdx}`;
                 const actionDiv = document.createElement('div');
                 actionDiv.id = actionId;
@@ -802,7 +824,6 @@
                 `;
                 li.appendChild(actionDiv);
 
-                // タスクを押した時のトグル動作
                 li.setAttribute('onclick', `toggleTaskAction('${actionId}')`);
                 todoList.appendChild(li);
             });
@@ -813,25 +834,21 @@
             }
         }
 
-        // タスクが押されたら「完了/まだ」ボタンを表示する
         function toggleTaskAction(id) {
             const el = document.getElementById(id);
             if (el) {
                 const isVisible = el.style.display === 'flex';
-                // 一旦全部閉じる
                 document.querySelectorAll('.task-action-overlay').forEach(box => box.style.display = 'none');
                 el.style.display = isVisible ? 'none' : 'flex';
             }
         }
 
-        // 「まだ」を押したら、アクションエリアだけ閉じる
         function closeTaskAction(e, id) {
-            e.stopPropagation(); // 親liのクリックイベント発火を防ぐ
+            e.stopPropagation();
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
         }
 
-        // 「完了」を押したらそのタスクを非表示にしてFirebaseへ保存
         function completeTask(e, companyIdx, taskType) {
             e.stopPropagation();
             if (taskType === 'ES') {
@@ -839,10 +856,9 @@
             } else {
                 companies[companyIdx].interviewTaskCompleted = true;
             }
-            saveToFirebase(window.currentUid); // リロードなしで即座に次のタスクが1つ前に押し出されるよ！
+            saveToFirebase(window.currentUid);
         }
 
-        // タスクのページ移動
         function changeTaskPage(offset) {
             currentTaskPage += offset;
             if (currentTaskPage < 1) currentTaskPage = 1;
@@ -985,8 +1001,8 @@
                 interviewDate: intFinal,
                 status: document.getElementById('selectionStatus').value,
                 memo: document.getElementById('memo').value,
-                esTaskCompleted: false,       // 初期化
-                interviewTaskCompleted: false // 初期化
+                esTaskCompleted: false,
+                interviewTaskCompleted: false
             };
 
             companies.push(companyData);
@@ -1026,7 +1042,6 @@
             return str.replace(/-/g, "/");
         }
 
-        // 特殊文字を安全に変換するよ
         function escapeHtml(str) {
             if (!str) return '';
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
