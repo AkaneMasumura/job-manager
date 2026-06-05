@@ -496,7 +496,7 @@ const auth = firebase.auth();
             }
         }
 
-        function updateSyncStatus(text, color) {
+       function updateSyncStatus(text, color) {
             const el = document.getElementById('syncStatus');
             if (el) {
                 el.textContent = text;
@@ -520,36 +520,35 @@ const auth = firebase.auth();
 
         function renderTable() {
             const tbody = document.getElementById('companyTableBody');
+            if (!tbody) return;
             tbody.innerHTML = '';
 
-            const keyword =
-document.getElementById("searchBox")?.value.toLowerCase() || "";
+            const keyword = document.getElementById("searchBox")?.value.toLowerCase() || "";
             
+            // 元の配列のインデックスを保持したままソート
             const indexedCompanies = companies.map((comp, idx) => ({ comp, idx }));
             indexedCompanies.sort((a, b) => a.comp.name.localeCompare(b.comp.name, 'ja'));
 
-            const filteredCompanies = indexedCompanies.filter(
-    ({ comp }) =>
-        comp.name.toLowerCase().includes(keyword)
-);
+            // フィルター処理
+            const filteredCompanies = indexedCompanies.filter(({ comp }) =>
+                comp.name.toLowerCase().includes(keyword)
+            );
 
             filteredCompanies.forEach(({ comp, idx }) => {
                 const tr = document.createElement('tr');
 
-                if(comp.esDeadline && !comp.esDone){
-
-    const deadline =
-      new Date(comp.esDeadline.replace(/-/g,"/"));
-
-    const today = new Date();
-
-    const diff =
-      (deadline - today) / (1000*60*60*24);
-
-    if(diff <= 3 && diff >= 0){
-        tr.style.backgroundColor = "#ffe3e3";
-    }
-}
+                // アラート背景色判定（当日も含めて3日以内を正確に判定）
+                if (comp.esDeadline && !comp.esDone) {
+                    const cleanStr = comp.esDeadline.includes(" ") ? comp.esDeadline.replace(/-/g, "/") : comp.esDeadline.replace(/-/g, "/") + " 23:59";
+                    const deadline = new Date(cleanStr);
+                    const today = new Date();
+                    
+                    // ミリ秒単位の差分を日数に換算（締め切り日当日も救済）
+                    const diff = (deadline - today) / (1000 * 60 * 60 * 24);
+                    if (diff <= 3 && diff >= -1) {
+                        tr.style.backgroundColor = "#ffe3e3"; // 期限間近は薄赤
+                    }
+                }
 
                 if (editingIndex === idx) {
                     tr.className = "inline-edit-row";
@@ -557,8 +556,8 @@ document.getElementById("searchBox")?.value.toLowerCase() || "";
                     const intObj = parseDateTimeString(comp.interviewDate);
 
                     let hOpts = "", mOpts = "";
-                    for(let i=0;i<24;i++) { let v=String(i).padStart(2,'0'); hOpts+=`<option value="${v}">${v}</option>`; }
-                    for(let i=0;i<60;i+=5) { let v=String(i).padStart(2,'0'); mOpts+=`<option value="${v}">${v}</option>`; }
+                    for(let i=0; i<24; i++) { let v=String(i).padStart(2,'0'); hOpts+=`<option value="${v}">${v}</option>`; }
+                    for(let i=0; i<60; i+=5) { let v=String(i).padStart(2,'0'); mOpts+=`<option value="${v}">${v}</option>`; }
 
                     tr.innerHTML = `
                         <td><input type="text" id="inline_name_${idx}" class="inline-input" value="${escapeHtml(comp.name)}" required></td>
@@ -639,13 +638,13 @@ document.getElementById("searchBox")?.value.toLowerCase() || "";
                 } else {
                     tr.className = getStatusColorClass(comp.status);
 
-                    const esDisplay = (comp.esDeadline && !comp.esDone) ? formatDisplayDate(comp.esDeadline) : '-';
+                    const esDisplay = (comp.esDeadline) ? formatDisplayDate(comp.esDeadline) : '-';
                     const nextDateDisplay = (comp.nextDateType && comp.interviewDate) 
                         ? `<strong>[${escapeHtml(comp.nextDateType)}]</strong><br>${formatDisplayDate(comp.interviewDate)}` 
                         : (comp.interviewDate ? formatDisplayDate(comp.interviewDate) : '-');
 
                     const nameTd = comp.hp ? `<a href="${comp.hp}" target="_blank" class="company-link">${escapeHtml(comp.name)}</a>` : escapeHtml(comp.name);
-                    const mypageTd = comp.mypageUrl ? `<a href="${comp.mypageUrl}" target="_blank" class="url-link" title="${comp.mypageUrl}">${escapeHtml(comp.mypageUrl)}</a>` : '-';
+                    const mypageTd = comp.mypageUrl ? `<a href="${comp.mypageUrl}" target="_blank" class="url-link" title="${comp.mypageUrl}">マイページ↗</a>` : '-';
 
                     let statusDisplay = escapeHtml(comp.status || '未エントリー');
                     if (comp.status === 'その他' && comp.otherStatus) {
@@ -700,8 +699,11 @@ document.getElementById("searchBox")?.value.toLowerCase() || "";
             const isEsDone = document.getElementById(`inline_esDone_${index}`).checked;
             let statusVal = document.getElementById(`inline_status_${index}`).value;
 
+            // 提出状態とステータスの整合性を自動調整
             if (isEsDone && statusVal === 'ES作成中') {
                 statusVal = 'ES提出済み';
+            } else if (!isEsDone && statusVal === 'ES提出済み') {
+                statusVal = 'ES作成中';
             }
 
             const esDateVal = document.getElementById(`inline_esDate_${index}`).value;
@@ -739,8 +741,11 @@ document.getElementById("searchBox")?.value.toLowerCase() || "";
 
         function toggleEsDone(index, isChecked) {
             companies[index].esDone = isChecked;
+            // 連動ロジックの強化
             if(isChecked && companies[index].status === 'ES作成中') {
                 companies[index].status = 'ES提出済み';
+            } else if(!isChecked && companies[index].status === 'ES提出済み') {
+                companies[index].status = 'ES作成中';
             }
             renderApp();
             saveToFirebase(window.currentUid);
@@ -748,13 +753,18 @@ document.getElementById("searchBox")?.value.toLowerCase() || "";
 
         function renderTodoList() {
             const todoList = document.getElementById('todoList');
+            if (!todoList) return;
             todoList.innerHTML = '';
+            
             const now = new Date();
             const sevenDaysLater = new Date();
             sevenDaysLater.setDate(now.getDate() + 7);
+            sevenDaysLater.setHours(23, 59, 59, 999); // 7日後の深夜まで含める
+
             let tasks = [];
 
             companies.forEach(comp => {
+                // ES判定：提出済みのものはタスクから除外
                 if (comp.esDeadline && !comp.esDone) {
                     const cleanStr = comp.esDeadline.includes(" ") ? comp.esDeadline.replace(/-/g, "/") : comp.esDeadline.replace(/-/g, "/") + " 00:00";
                     const esDate = new Date(cleanStr);
@@ -765,6 +775,7 @@ document.getElementById("searchBox")?.value.toLowerCase() || "";
                         });
                     }
                 }
+                // 次選考判定：ステータスが「不合格」「内定辞退」などの場合は出さない運用も可能ですが、ここでは日付があれば出す仕様を維持
                 if (comp.interviewDate) {
                     const cleanStr = comp.interviewDate.includes(" ") ? comp.interviewDate.replace(/-/g, "/") : comp.interviewDate.replace(/-/g, "/") + " 00:00";
                     const intDate = new Date(cleanStr);
@@ -797,21 +808,21 @@ document.getElementById("searchBox")?.value.toLowerCase() || "";
             renderCalendar();
         }
 
-        // どんな画面サイズ・ズームでも絶対にズレない精密ポップアップ関数
         function showCalendarPopup(e, info) {
             e.stopPropagation();
             const popup = document.getElementById('calendarPopup');
             const content = document.getElementById('calendarPopupContent');
+            if (!popup || !content) return;
+
             content.innerHTML = info.replace(/\n/g, '<br>');
-            
             popup.style.display = 'block';
             
-            // カレンダー全体の親要素（相対配置の基準）を取得
             const card = popup.offsetParent;
+            if (!card) return;
+
             const cardRect = card.getBoundingClientRect();
             const dotRect = e.target.getBoundingClientRect();
             
-            // スクロールやズームに左右されない、親要素カード内での正確な引き算位置を計算
             const topPosition = dotRect.top - cardRect.top - popup.offsetHeight - 8;
             const leftPosition = dotRect.left - cardRect.left - (popup.offsetWidth / 2) + (dotRect.width / 2);
             
@@ -820,7 +831,8 @@ document.getElementById("searchBox")?.value.toLowerCase() || "";
         }
 
         function closeCalendarPopup() {
-            document.getElementById('calendarPopup').style.display = 'none';
+            const popup = document.getElementById('calendarPopup');
+            if (popup) popup.style.display = 'none';
         }
 
         document.addEventListener('click', () => { closeCalendarPopup(); });
@@ -828,7 +840,9 @@ document.getElementById("searchBox")?.value.toLowerCase() || "";
         function renderCalendar() {
             const title = document.getElementById('calendarTitle');
             const grid = document.getElementById('calendarGrid');
+            if (!title || !grid) return;
             grid.innerHTML = '';
+
             const year = currentCalendarDate.getFullYear();
             const month = currentCalendarDate.getMonth();
             title.textContent = `${year}年 ${month + 1}月`;
@@ -849,6 +863,7 @@ document.getElementById("searchBox")?.value.toLowerCase() || "";
                 const currentDate = new Date(calendarStartDate);
                 currentDate.setDate(calendarStartDate.getDate() + i);
                 if (i >= 35 && currentDate.getMonth() !== month && currentDate.getDay() === 0) { break; }
+                
                 const cell = document.createElement('div');
                 cell.className = 'calendar-cell';
                 if (currentDate.getMonth() !== month) cell.classList.add('other-month');
@@ -868,6 +883,9 @@ document.getElementById("searchBox")?.value.toLowerCase() || "";
                 const compStr = `${yyyy}-${mm}-${dd}`;
 
                 companies.forEach(comp => {
+                    // ステータスが「不合格」などの場合はカレンダーのドットを非表示にする条件を追加すると、より実用的になります
+                    if (comp.status === '不合格') return;
+
                     if (comp.esDeadline && !comp.esDone) {
                         if (comp.esDeadline.startsWith(compStr)) dayEvents.push({ text: `🎀 ES提出：${comp.name}`, status: comp.status });
                     }
@@ -981,6 +999,3 @@ document.getElementById("searchBox")?.value.toLowerCase() || "";
             if (!str) return '';
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
-    </script>
-</body>
-</html>
