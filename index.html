@@ -139,7 +139,10 @@
         /* 企業名・URLなどの個別パーツ調整 */
         .comp-name-black { color: #000000 !important; text-decoration: none; }
         .comp-name-black.has-link { text-decoration: underline; }
-        .mypage-link-style { color: #4dadf7; font-weight: bold; text-decoration: underline; }
+        
+        /* マイページ情報の1行黒文字用スタイル */
+        .mypage-inline-info { color: #000000 !important; font-weight: normal; }
+        .mypage-inline-info a { color: #000000 !important; text-decoration: underline; font-weight: bold; }
         
         /* 2行構成用スタイル */
         .two-line-cell { display: flex; flex-direction: column; gap: 2px; }
@@ -163,13 +166,8 @@
         }
         input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary-pink); background-color: #fff; }
         
-        /* 選考ステータス背景色マッピングクラス */
-        .status-row-white { background-color: var(--status-white); }
-        .status-row-pink { background-color: var(--status-pink); }
-        .status-row-yellow { background-color: var(--status-yellow); }
-        .status-row-green { background-color: var(--status-green); }
-        .status-row-purple { background-color: var(--status-purple); }
-        .status-row-gray { background-color: var(--status-gray); color: #868e96; }
+        /* 通常時は色をつけず白背景に統一 */
+        .status-row-white { background-color: #ffffff; }
         
         .action-btn { padding: 4px 10px; font-size: 0.75rem; border-radius: 20px; cursor: pointer; background: #fff; border: 2px solid var(--border-soft); color: var(--text-dark); font-weight: bold;}
         .action-btn:hover { background: #fff0f3; border-color: var(--primary-pink); }
@@ -254,9 +252,9 @@
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 5px;">
                                 <span id="calendarTitle" style="font-weight: bold; font-size:0.9rem; color:#ff6b8b;">----年 --月</span>
                                 <div style="display: flex; align-items: center; gap: 4px;">
+                                    <button onclick="resetToTodayMonth()" class="action-btn" style="padding:2px 4px; font-size:0.8rem; color:#000000;" title="今日に戻る">🔄</button>
                                     <button onclick="changeMonth(-1)" class="action-btn" style="padding:2px 6px;">◀</button>
                                     <button onclick="changeMonth(1)" class="action-btn" style="padding:2px 6px;">▶</button>
-                                    <button onclick="resetToTodayMonth()" class="action-btn" style="padding:2px 4px; font-size:0.8rem;" title="今日に戻る">🔄</button>
                                 </div>
                             </div>
                             <div id="calendarGrid" class="calendar-grid"></div>
@@ -265,7 +263,7 @@
                 </div>
             </div>
             
-            <!-- 📊 登録企業一覧（表形式一元化） -->
+            <!-- 📊 登録企業一覧 -->
             <div class="card section-company-list">
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
                     <h3 style="margin:0; color:#ff6b8b; font-size:1.0rem; text-align: left;">📊 登録企業一覧</h3>
@@ -276,13 +274,12 @@
                     <table>
                         <thead>
                             <tr>
-                                <th style="width: 14%;">企業名</th>
-                                <th style="width: 13%;">マイページ</th>
-                                <th style="width: 11%;">マイページID</th>
+                                <th style="width: 15%;">企業名</th>
+                                <th style="width: 25%;">マイページ / ID</th>
                                 <th style="width: 21%;">ES提出期限/状況</th>
-                                <th style="width: 17%;">次回日程</th>
-                                <th style="width: 10%;">ステータス</th>
-                                <th style="width: 14%;">メモ</th>
+                                <th style="width: 16%;">次回日程</th>
+                                <th style="width: 11%;">ステータス</th>
+                                <th style="width: 12%;">メモ</th>
                                 <th style="width: 10%;">操作</th>
                             </tr>
                         </thead>
@@ -458,7 +455,6 @@
                     window.userName = "ユーザー";
                     docRef.set({ companies: [], userName: "ユーザー" }, { merge: true });
                 }
-                document.getElementById('appTitleDisplay').textContent = `${window.userName}のshukatsu`;
                 document.getElementById('appTitleDisplay').textContent = `${window.userName}の就活`;
                 renderApp();
                 updateSyncStatus("同期済み ✨", "#2b8a3e");
@@ -521,20 +517,8 @@
             renderCalendar();
         }
 
-        function getStatusColorClass(status) {
-            switch(status) {
-                case '未エントリー': case '説明会': case 'その他': return 'status-row-white';
-                case 'ES作成中': case 'ES提出済み': return 'status-row-pink';
-                case 'テスト': case 'GD': case '一次面接': case '二次面接': case '最終面接': return 'status-row-yellow';
-                case 'インターン': case '結果待ち': return 'status-row-green';
-                case '内定': return 'status-row-purple';
-                case '不合格': return 'status-row-gray';
-                default: return 'status-row-white';
-            }
-        }
-
         function formatMypageUrlText(url) {
-            if(!url) return "-";
+            if(!url) return "";
             if(url.length <= 15) return url;
             return url.substring(0, 15) + "...";
         }
@@ -566,14 +550,13 @@
             const filteredCompanies = indexedCompanies.filter(({ comp }) => comp.name.toLowerCase().includes(keyword));
 
             if (filteredCompanies.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#868e96; padding:20px;">企業がまだ登録されていないよ🔍</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#868e96; padding:20px;">企業がまだ登録されていないよ🔍</td></tr>`;
                 return;
             }
 
             filteredCompanies.forEach(({ comp, idx }) => {
                 const tr = document.createElement('tr');
-                const bgClass = getStatusColorClass(comp.status);
-                tr.className = bgClass;
+                tr.className = 'status-row-white'; // 選考ステータスごとの色はつけない（白に統一）
 
                 if (editingIndex === idx) {
                     // 🛠️ テーブル内インライン編集モード
@@ -586,15 +569,21 @@
 
                     tr.innerHTML = `
                         <td><input type="text" id="inline_name_${idx}" class="table-edit-box" value="${escapeHtml(comp.name)}" required></td>
-                        <td><input type="url" id="inline_mypageUrl_${idx}" class="table-edit-box" value="${escapeHtml(comp.mypageUrl || '')}" placeholder="URL"></td>
-                        <td><input type="text" id="inline_mypageId_${idx}" class="table-edit-box" value="${escapeHtml(comp.mypageId || '')}"></td>
+                        <td>
+                            <div style="display:flex; flex-direction:column; gap:4px;">
+                                <input type="url" id="inline_mypageUrl_${idx}" class="table-edit-box" value="${escapeHtml(comp.mypageUrl || '')}" placeholder="マイページURL">
+                                <input type="text" id="inline_mypageId_${idx}" class="table-edit-box" value="${escapeHtml(comp.mypageId || '')}" placeholder="ID">
+                            </div>
+                        </td>
                         
                         <td>
-                            <label style="margin:0; display:flex; align-items:center; gap:4px; font-size:0.75rem;"><input type="checkbox" id="inline_esDone_${idx}" ${comp.esDone ? 'checked' : ''} style="width:auto;">提出済</label>
-                            <input type="date" id="inline_esDate_${idx}" class="table-edit-box" value="${esObj.date}" style="margin-top:2px;">
-                            <label style="font-weight:normal; font-size:0.7rem; display:flex; align-items:center; gap:4px; margin-top:2px;"><input type="checkbox" id="inline_esHasTime_${idx}" ${esObj.hasTime?'checked':''} onchange="document.getElementById('inline_esTimeBox_${idx}').style.display=this.checked?'flex':'none'" style="width:auto;">時間指定</label>
-                            <div id="inline_esTimeBox_${idx}" class="time-box-flex" style="display:${esObj.hasTime?'flex':'none'};">
-                                <select id="inline_esHour_${idx}" class="table-edit-box">${hOpts}</select>:<select id="inline_esMin_${idx}" class="table-edit-box">${mOpts}</select>
+                            <div style="display:flex; flex-direction:column; gap:4px;">
+                                <label style="margin:0; display:flex; align-items:center; gap:4px; font-size:0.75rem;"><input type="checkbox" id="inline_esDone_${idx}" ${comp.esDone ? 'checked' : ''} style="width:auto;">提出済</label>
+                                <input type="date" id="inline_esDate_${idx}" class="table-edit-box" value="${esObj.date}">
+                                <label style="font-weight:normal; font-size:0.7rem; display:flex; align-items:center; gap:4px;"><input type="checkbox" id="inline_esHasTime_${idx}" ${esObj.hasTime?'checked':''} onchange="document.getElementById('inline_esTimeBox_${idx}').style.display=this.checked?'flex':'none'" style="width:auto;">時間指定</label>
+                                <div id="inline_esTimeBox_${idx}" class="time-box-flex" style="display:${esObj.hasTime?'flex':'none'};">
+                                    <select id="inline_esHour_${idx}" class="table-edit-box">${hOpts}</select>:<select id="inline_esMin_${idx}" class="table-edit-box">${mOpts}</select>
+                                </div>
                             </div>
                         </td>
                         
@@ -650,10 +639,33 @@
                 } else {
                     // 👀 通常表示テーブル行モード
                     
-                    // ESの分割
-                    const esData = splitDeadlineString(comp.esDeadline);
-                    const isEsDoneText = comp.esDone ? "提出済" : "未提出";
-                    const esRightSub = esData.time ? `${esData.time}<br>${isEsDoneText}` : isEsDoneText;
+                    // マイページとIDを1行で構成 (黒文字化)
+                    let mypageHtml = '<span style="color:#ccc;">-</span>';
+                    if (comp.mypageUrl || comp.mypageId) {
+                        const linkPart = comp.mypageUrl ? `<a href="${comp.mypageUrl}" target="_blank">${escapeHtml(formatMypageUrlText(comp.mypageUrl))}</a>` : '-';
+                        const idPart = comp.mypageId ? escapeHtml(comp.mypageId) : '-';
+                        mypageHtml = `<div class="mypage-inline-info">${linkPart} / ${idPart}</div>`;
+                    }
+
+                    // ES提出期限/状況の構成 (チェックボックスの右側に二行: 上部日時、下部ステータス)
+                    let esDeadlineHtml = "-";
+                    if (comp.esDeadline) {
+                        const esData = splitDeadlineString(comp.esDeadline);
+                        const fullEsTimeText = esData.time ? `${esData.date} ${esData.time}` : esData.date;
+                        const isEsDoneText = comp.esDone ? "提出済" : "未提出";
+                        
+                        esDeadlineHtml = `
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <label style="display:inline-flex; align-items:center; cursor:pointer; margin:0;">
+                                    <input type="checkbox" ${comp.esDone ? 'checked' : ''} onchange="toggleEsDone(${idx}, this.checked)" style="width:auto; margin:0;">
+                                </label>
+                                <div class="two-line-cell" style="text-align:left; line-height:1.2;">
+                                    <span style="font-size:0.85rem; font-weight:bold; color:#000;">${fullEsTimeText}</span>
+                                    <span class="small-sub-text" style="font-weight:bold; color:#5c4d50;">${isEsDoneText}</span>
+                                </div>
+                            </div>
+                        `;
+                    }
 
                     // 次回日程の構成
                     let nextScheduleHtml = "-";
@@ -677,19 +689,10 @@
                             ${comp.hp ? `<a href="${comp.hp}" target="_blank" class="comp-name-black has-link">${escapeHtml(comp.name)}</a>` : `<span class="comp-name-black">${escapeHtml(comp.name)}</span>`}
                         </td>
                         <td>
-                            ${comp.mypageUrl ? `<a href="${comp.mypageUrl}" target="_blank" class="mypage-link-style">${escapeHtml(formatMypageUrlText(comp.mypageUrl))}</a>` : '<span style="color:#ccc;">-</span>'}
+                            ${mypageHtml}
                         </td>
-                        <td>${escapeHtml(comp.mypageId) || '-'}</td>
                         <td>
-                            ${comp.esDeadline ? `
-                            <div style="display:flex; align-items:center; gap:8px;">
-                                <span style="font-size:0.9rem; font-weight:bold;">${esData.date}</span>
-                                <div class="small-sub-text" style="line-height:1.2; text-align:left;">${esRightSub}</div>
-                                <label style="display:inline-flex; align-items:center; margin-left:auto; cursor:pointer;">
-                                    <input type="checkbox" ${comp.esDone ? 'checked' : ''} onchange="toggleEsDone(${idx}, this.checked)" style="width:auto; margin:0;">
-                                </label>
-                            </div>
-                            ` : '-'}
+                            ${esDeadlineHtml}
                         </td>
                         <td>
                             ${nextScheduleHtml}
@@ -879,8 +882,9 @@
             if (targetPopup && !alreadyOpen) { targetPopup.style.display = 'block'; }
         };
         
-        document.addEventListener('click', () => { document.querySelectorAll('.calendar-popup').forEach(p => p.style.display = 'none'); });
+         document.addEventListener('click', () => { document.querySelectorAll('.calendar-popup').forEach(p => p.style.display = 'none'); });
 
+        // カレンダー上のまる（ドット）を企業の選考ステータスに合わせた色にする
         function getDotColor(status) {
             switch(status) {
                 case '未エントリー': case '説明会': case 'その他': return '#ced4da'; // 灰色系
@@ -944,6 +948,7 @@
                     const clickInfo = dayEvents.map(e => e.text).join('<br>');
                     const dot = document.createElement('span');
                     dot.className = `cal-dot`;
+                    // その日の最初の予定を持つ企業の選考ステータスに合わせた色を設定
                     dot.style.backgroundColor = getDotColor(dayEvents[0].status || '未エントリー');
                     dot.setAttribute('onclick', `togglePopupInCell(event, ${i})`);
                     dotsContainer.appendChild(dot);
@@ -1001,7 +1006,6 @@
             if (parts.length === 2) { const t = parts[1].split(":"); return { date: parts[0], hasTime: true, hour: t[0], min: t[1] }; }
             return { date: str, hasTime: false, hour: "00", min: "00" };
         }
-        function formatDisplayDate(str) { if(!str) return "-"; return str.replace(/-/g, "/"); }
         function escapeHtml(str) { if (!str) return ''; return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
     </script>
 </body>
