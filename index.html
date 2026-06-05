@@ -18,7 +18,7 @@
             --border-soft: #fecdd3;
             --text-dark: #5c4d50;
             
-            /* ステータスカラー */
+            /* 選考ステータスごとの背景色定義 */
             --status-white: #ffffff;
             --status-pink: #ffe3e8;
             --status-yellow: #fff9db;
@@ -38,12 +38,14 @@
         
         .container { max-width: 1200px; margin: 0 auto; }
         
+        /* カード共通スタイル */
         .card {
             background: white; border-radius: 20px; padding: 24px; margin-bottom: 24px;
             box-shadow: 0 8px 16px rgba(255, 183, 197, 0.15); border: 2px solid var(--border-soft);
             box-sizing: border-box; width: 100%;
         }
         
+        /* ヘッダーエリア */
         .header-area {
             display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
             gap: 15px; margin-bottom: 25px; background: white; padding: 16px 24px;
@@ -60,6 +62,7 @@
         .auth-top-row { display: flex; align-items: center; gap: 12px; }
         .user-email-display { font-size: 0.75rem; color: #a08a8e; font-weight: bold; padding-right: 6px; }
         
+        /* ボタン */
         .btn-cute {
             background-color: var(--primary-pink); color: white; border: none; padding: 10px 20px;
             border-radius: 30px; cursor: pointer; font-weight: bold; font-size: 0.9rem;
@@ -71,6 +74,7 @@
         
         .status-badge { font-size: 0.8rem; font-weight: bold; padding: 6px 14px; border-radius: 20px; background: #f1f3f5; border: 1px solid #dee2e6; }
         
+        /* あいさつボックス */
         .greeting-box {
             background: linear-gradient(135deg, #fff0f3 0%, #ffe3e8 100%); border: 2px dotted #ff85a2;
             padding: 12px 14px; text-align: center; font-size: 1rem; font-weight: bold;
@@ -79,7 +83,7 @@
         }
         @keyframes fuwafuwa { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 
-        /* レイアウト */
+        /* PCレイアウト */
         .pc-top-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 24px; align-items: start; }
         .flexible-layout-wrapper { display: flex; flex-direction: column; }
         .section-top-row { order: 1; }
@@ -96,6 +100,7 @@
         .calendar-dots { display: flex; gap: 3px; justify-content: center; margin-top: 2px; }
         .cal-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; cursor: pointer; border: 1px solid #ffa6ba; }
         
+        /* カレンダーポップアップ */
         .calendar-popup {
             position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%);
             background: white; border: 2px solid var(--primary-pink); padding: 8px 10px;
@@ -120,7 +125,7 @@
         .btn-task-yet { background: #adb5bd; color: white; }
         .pagination-container { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 10px; font-size: 0.8rem; font-weight: bold; }
         
-        /* 入力欄 */
+        /* 入力欄パーツ */
         .form-grid-two-rows { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 15px; }
         .date-time-card-box { border: 2px solid var(--border-soft); padding: 12px; border-radius: 12px; background: #fffbfb; box-sizing: border-box; width: 100%; }
         label { display: block; margin-bottom: 4px; font-weight: bold; font-size: 0.85rem; color: #7c6a6e; text-align: left; }
@@ -130,7 +135,7 @@
         }
         input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary-pink); background-color: #fff; }
         
-        /* 選考ステータス背景色 */
+        /* 選考ステータス背景色マッピングクラス */
         .status-row-white { background-color: var(--status-white); }
         .status-row-pink { background-color: var(--status-pink); }
         .status-row-yellow { background-color: var(--status-yellow); }
@@ -143,23 +148,29 @@
         .loading-mask { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); display:none; justify-content:center; align-items:center; z-index:9999; font-weight:bold; }
 
         /* ===================================================
-           💻 企業管理テーブルスタイル（横並び一列）
+           📱 アコーディオン式モバイル表示用カードスタイル
            =================================================== */
-        .pc-company-row {
-            border: 2px solid var(--border-soft); border-radius: 14px; margin-bottom: 12px;
-            padding: 16px; background: white; box-sizing: border-box; width: 100%;
-            display: grid;
-            grid-template-columns: 1.4fr 1.4fr 1.2fr 1.2fr 1fr 1.5fr 0.8fr; /* 指定順の7列 */
-            gap: 12px; align-items: center; text-align: left; font-size: 0.85rem;
+        .mobile-company-card {
+            border: 2px solid var(--border-soft); border-radius: 16px; margin-bottom: 12px;
+            overflow: hidden; background: white; box-sizing: border-box; width: 100%;
         }
-        .pc-company-cell { word-break: break-all; }
-        .pc-company-cell-label { display: none; } /* PCでは項目見出しを隠す */
+        .mobile-card-header {
+            padding: 14px 16px; display: flex; justify-content: space-between; align-items: center;
+            cursor: pointer; user-select: none; box-sizing: border-box; width: 100%; gap: 10px;
+        }
+        .mobile-card-header-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+        .mobile-card-title { font-weight: bold; font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mobile-arrow { font-size: 0.85rem; color: #a08a8e; transition: transform 0.2s; font-weight: bold; flex-shrink: 0; }
+        .mobile-arrow.open { transform: rotate(180deg); }
         
-        .pc-edit-container {
-            grid-column: span 7; display: grid; grid-template-columns: repeat(4, 1fr);
-            gap: 12px; background: #fffafb; padding: 14px; border-radius: 12px; box-sizing: border-box;
-        }
-        .pc-edit-full { grid-column: span 4; display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }
+        .mobile-card-body { display: none; padding: 16px; border-top: 1px dashed var(--border-soft); background: #fffdfd; box-sizing: border-box; width: 100%; }
+        .mobile-info-row { margin-bottom: 12px; font-size: 0.85rem; text-align: left; }
+        .mobile-info-row:last-child { margin-bottom: 0; }
+        .mobile-info-label { font-weight: bold; color: #ff6b8b; font-size: 0.75rem; margin-bottom: 2px; }
+        .mobile-info-value { word-break: break-all; line-height: 1.4; color: var(--text-dark); }
+        
+        .mobile-edit-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; width: 100%; box-sizing: border-box; text-align: left; }
+        .mobile-edit-full { grid-column: span 2; display: flex; justify-content: flex-end; gap: 10px; margin-top: 6px; }
         .time-box-flex { display: flex; align-items: center; gap: 4px; margin-top: 4px; width: 100%; box-sizing: border-box; }
         .time-box-flex select { flex: 1; width: 100% !important; min-width: 0; padding: 6px !important; }
 
@@ -195,15 +206,9 @@
             textarea { height: 38px; }
             #companyForm button[type="submit"] { width: 100%; padding: 10px; font-size: 0.85rem; }
 
-            /* スマホで縦並びカードに変形 */
-            .pc-company-row { display: block; padding: 14px; border-radius: 12px; margin-bottom: 10px; width: 100% !important; box-sizing: border-box; }
-            .pc-company-cell { margin-bottom: 10px; }
-            .pc-company-cell:last-child { margin-bottom: 0; }
-            .pc-company-cell-label { display: block; font-weight: bold; color: #ff6b8b; font-size: 0.75rem; margin-bottom: 2px; }
-            
-            .pc-edit-container { grid-template-columns: 1fr; gap: 8px; padding: 10px; grid-column: span 1; }
-            .pc-edit-full { grid-column: span 1; flex-direction: column; gap: 6px; }
-            .pc-edit-container .date-time-card-box { width: 100% !important; box-sizing: border-box; }
+            .mobile-edit-container { grid-template-columns: 1fr; gap: 8px; }
+            .mobile-edit-full { grid-column: span 1; flex-direction: column; gap: 6px; }
+            .mobile-edit-container .date-time-card-box { width: 100% !important; box-sizing: border-box; }
         }
     </style>
 </head>
@@ -339,12 +344,14 @@
         window.userName = "ユーザー";
         window.currentUid = null;
         let editingIndex = null;
+        let openCardIndex = null; // どのアコーディオンが開いているかを管理
         let currentCalendarDate = new Date();
         let unsubscribeRealtime = null;
 
         let currentTaskPage = 1;
         const tasksPerPage = 5;
 
+        // 時間選択セレクトボックスの初期化
         function initTimeSelectsForElement(hEl, mEl) {
             if(hEl && hEl.options.length === 0) {
                 for(let i=0; i<24; i++) { let v = String(i).padStart(2, '0'); hEl.appendChild(new Option(v, v)); }
@@ -359,6 +366,7 @@
             initTimeSelectsForElement(document.getElementById('interviewHour'), document.getElementById('interviewMin'));
         })();
 
+        // リアルタイムあいさつメッセージの更新
         function updateGreetingMessage() {
             const now = new Date();
             const hour = now.getHours();
@@ -497,7 +505,7 @@
         }
 
         // ===================================================
-        // 📊 登録企業一覧の描画 (指定並び順テーブル形式)
+        // 📊 登録企業アコーディオンカードの描画
         // ===================================================
         function renderTable() {
             const targetContainer = document.getElementById('companyMobileList');
@@ -516,25 +524,27 @@
             }
 
             filteredCompanies.forEach(({ comp, idx }) => {
-                const rowDiv = document.createElement('div');
-                const bgClass = getStatusColorClass(comp.status);
-                rowDiv.className = `pc-company-row ${bgClass}`;
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'mobile-company-card';
                 
+                const bgClass = getStatusColorClass(comp.status);
+                const isCurrentlyOpen = (openCardIndex === idx);
+
                 if (editingIndex === idx) {
-                    // 🛠️ 【その場編集モード】
+                    // 🛠️ 編集モード
                     const esObj = parseDateTimeString(comp.esDeadline);
                     const intObj = parseDateTimeString(comp.interviewDate);
                     
                     let hOpts = "", mOpts = "";
-                    for(let i=0;i<24;i++) { let v=String(i).padStart(2,'0'); hOpts+=`<option value="${v}">${v}</option>`; }
-                    for(let i=0;i<60;i+=5) { let v=String(i).padStart(2,'0'); mOpts+=`<option value="${v}">${v}</option>`; }
+                    for(let i=0; i<24; i++) { let v = String(i).padStart(2, '0'); hOpts += `<option value="${v}">${v}</option>`; }
+                    for(let i=0; i<60; i+=5) { let v = String(i).padStart(2, '0'); mOpts += `<option value="${v}">${v}</option>`; }
 
-                    rowDiv.innerHTML = `
-                        <div class="pc-edit-container">
-                            <div><label>企業名 *</label><input type="text" id="mob_name_${idx}" value="${escapeHtml(comp.name)}" required></div>
+                    cardDiv.innerHTML = `
+                        <div class="mobile-edit-container ${bgClass}" style="padding: 14px;">
+                            <div style="grid-column: span 2;"><label>企業名 *</label><input type="text" id="mob_name_${idx}" value="${escapeHtml(comp.name)}" required></div>
                             <div><label>HP URL</label><input type="url" id="mob_hp_${idx}" value="${escapeHtml(comp.hp || '')}"></div>
                             <div><label>マイページURL</label><input type="url" id="mob_mypageUrl_${idx}" value="${escapeHtml(comp.mypageUrl || '')}"></div>
-                            <div><label>マイページID</label><input type="text" id="mob_mypageId_${idx}" value="${escapeHtml(comp.mypageId || '')}"></div>
+                            <div style="grid-column: span 2;"><label>マイページID</label><input type="text" id="mob_mypageId_${idx}" value="${escapeHtml(comp.mypageId || '')}"></div>
                             
                             <div class="date-time-card-box">
                                 <label style="margin-top:0; display:flex; align-items:center; gap:6px;"><input type="checkbox" id="mob_esDone_${idx}" ${comp.esDone ? 'checked' : ''} style="width:auto !important; margin:0;"> ES提出完了にする</label>
@@ -566,7 +576,7 @@
                                 </div>
                             </div>
 
-                            <div>
+                            <div style="grid-column: span 2;">
                                 <label>ステータス</label>
                                 <select id="mob_status_${idx}">
                                     <option value="未エントリー" ${comp.status==='未エントリー'?'selected':''}>未エントリー</option>
@@ -585,9 +595,9 @@
                                     <option value="その他" ${comp.status==='その他'?'selected':''}>その他</option>
                                 </select>
                             </div>
-                            <div><label>メモ</label><textarea id="mob_memo_${idx}" rows="2" style="height:38px;">${escapeHtml(comp.memo || '')}</textarea></div>
+                            <div style="grid-column: span 2;"><label>メモ</label><textarea id="mob_memo_${idx}" rows="2" style="height:38px;">${escapeHtml(comp.memo || '')}</textarea></div>
                             
-                            <div class="pc-edit-full">
+                            <div class="mobile-edit-full">
                                 <button class="action-btn" style="background:var(--primary-pink); color:white; border:none; padding: 6px 14px;" onclick="saveMobileEdit(${idx})">保存する ✨</button>
                                 <button class="action-btn" style="padding: 6px 14px;" onclick="cancelInlineEdit()">戻る</button>
                             </div>
@@ -596,52 +606,82 @@
                     if(esObj.hasTime){ document.getElementById(`mob_esHour_${idx}`).value = esObj.hour; document.getElementById(`mob_esMin_${idx}`).value = esObj.min; }
                     if(intObj.hasTime){ document.getElementById(`mob_intHour_${idx}`).value = intObj.hour; document.getElementById(`mob_intMin_${idx}`).value = intObj.min; }
                 } else {
-                    // 👀 【通常表示モード：ご指定の順番通り】
-                    rowDiv.innerHTML = `
-                        <div class="pc-company-cell">
-                            <span class="pc-company-cell-label">企業名:</span>
-                            ${comp.hp ? `<a href="${comp.hp}" target="_blank" style="color:#ff6b8b; font-weight:bold; font-size:1.0rem; text-decoration: underline;">${escapeHtml(comp.name)} ↗</a>` : `<strong style="font-size:1.0rem; color:#ff6b8b;">${escapeHtml(comp.name)}</strong>`}
+                    // 👀 通常表示アコーディオンモード
+                    cardDiv.innerHTML = `
+                        <div class="mobile-card-header ${bgClass}" onclick="toggleMobileCard(${idx})">
+                            <div class="mobile-card-header-left">
+                                <span class="mobile-card-title">${escapeHtml(comp.name)}</span>
+                                <span class="status-badge" style="background: white; flex-shrink:0;">${escapeHtml(comp.status)}</span>
+                            </div>
+                            <span id="arrow-${idx}" class="mobile-arrow ${isCurrentlyOpen ? 'open' : ''}">▼</span>
                         </div>
-                        
-                        <div class="pc-company-cell">
-                            <span class="pc-company-cell-label">マイページ:</span>
-                            ${comp.mypageUrl ? `<a href="${comp.mypageUrl}" target="_blank" style="color:#4dadf7; font-weight:bold; display:block;">🔑 マイページ ↗</a>` : '<span style="color:#ccc;">URL未設定</span>'}
-                            <div style="font-size:0.75rem; color:#666; margin-top:4px;">ID: <code>${escapeHtml(comp.mypageId) || '-'}</code></div>
-                        </div>
-                        
-                        <div class="pc-company-cell">
-                            <span class="pc-company-cell-label">ES提出締切日:</span>
-                            <div style="font-weight:bold; margin-bottom:4px;">${comp.esDeadline ? formatDisplayDate(comp.esDeadline) : '<span style="color:#ccc;">未設定</span>'}</div>
-                            <label style="display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:0.8rem; background:white; padding:2px 6px; border-radius:6px; border:1px solid var(--border-soft);">
-                                <input type="checkbox" ${comp.esDone ? 'checked' : ''} onchange="toggleEsDone(${idx}, this.checked)" style="width:auto !important; margin:0;"> 
-                                <span style="font-weight:bold; color: ${comp.esDone ? '#40c057':'#ff85a2'};">${comp.esDone ? '✅ 提出済み':'⬜ 未提出'}</span>
-                            </label>
-                        </div>
-                        
-                        <div class="pc-company-cell">
-                            <span class="pc-company-cell-label">次回の予定と日時:</span>
-                            ${comp.interviewDate ? `<div><span style="background:#fffdbd; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:0.75rem; color:#b78a00;">${escapeHtml(comp.nextDateType || '予定')}</span></div><div style="margin-top:2px; font-size:0.8rem;">${formatDisplayDate(comp.interviewDate)}</div>` : '<span style="color:#ccc;">未設定</span>'}
-                        </div>
-                        
-                        <div class="pc-company-cell">
-                            <span class="pc-company-cell-label">選考ステータス:</span>
-                            <span class="status-badge" style="background:white; display:inline-block; margin-top:2px;">${escapeHtml(comp.status)}</span>
-                        </div>
-                        
-                        <div class="pc-company-cell" style="max-height:90px; overflow-y:auto;">
-                            <span class="pc-company-cell-label">メモ:</span>
-                            <span style="color:#555; white-space:pre-wrap; font-size:0.8rem;">${escapeHtml(comp.memo || '-')}</span>
-                        </div>
-                        
-                        <div class="pc-company-cell" style="text-align:right; display:flex; gap:6px; justify-content:flex-end;">
-                            <button class="action-btn" onclick="startInlineEdit(${idx})">この場で編集する 📝</button>
-                            <button class="action-btn" style="color:#fa5252;" onclick="deleteCompany(${idx})">削除</button>
+                        <div id="body-${idx}" class="mobile-card-body" style="display: ${isCurrentlyOpen ? 'block' : 'none'};">
+                            <div class="mobile-info-row">
+                                <div class="mobile-info-label">企業名</div>
+                                <div class="mobile-info-value" style="font-weight: bold; font-size:1.1rem;">
+                                    ${comp.hp ? `<a href="${comp.hp}" target="_blank" style="color:#ff6b8b; text-decoration: underline;">${escapeHtml(comp.name)} ↗</a>` : escapeHtml(comp.name)}
+                                </div>
+                            </div>
+                            <div class="mobile-info-row">
+                                <div class="mobile-info-label">マイページ</div>
+                                <div class="mobile-info-value">
+                                    ${comp.mypageUrl ? `<a href="${comp.mypageUrl}" target="_blank" style="color:#4dadf7; font-weight:bold;">🔑 マイページを開く ↗</a>` : '<span style="color:#ccc;">URL未設定</span>'}
+                                </div>
+                            </div>
+                            <div class="mobile-info-row">
+                                <div class="mobile-info-label">マイページID</div>
+                                <div class="mobile-info-value"><code>${escapeHtml(comp.mypageId) || '-'}</code></div>
+                            </div>
+                            <div class="mobile-info-row">
+                                <div class="mobile-info-label">ES提出締切日 / 提出状況</div>
+                                <div class="mobile-info-value" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:4px;">
+                                    <span style="font-weight:bold;">${comp.esDeadline ? formatDisplayDate(comp.esDeadline) : '未設定'}</span>
+                                    <label style="display:inline-flex; align-items:center; gap:6px; cursor:pointer; font-size:0.8rem; background:white; padding:4px 8px; border-radius:6px; border:1px solid var(--border-soft);">
+                                        <input type="checkbox" ${comp.esDone ? 'checked' : ''} onchange="toggleEsDone(${idx}, this.checked)" onclick="event.stopPropagation();" style="width:auto !important; margin:0;"> 
+                                        <span style="font-weight:bold; color: ${comp.esDone ? '#40c057':'#ff85a2'};">${comp.esDone ? '✅ 提出済み':'⬜ 未提出'}</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="mobile-info-row">
+                                <div class="mobile-info-label">次回の選考予定日時</div>
+                                <div class="mobile-info-value">
+                                    ${comp.interviewDate ? `<span style="background:#fffdbd; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:0.75rem; color:#b78a00; margin-right:6px;">${escapeHtml(comp.nextDateType || '予定')}</span> <strong>${formatDisplayDate(comp.interviewDate)}</strong>` : '-'}
+                                </div>
+                            </div>
+                            <div class="mobile-info-row">
+                                <div class="mobile-info-label">メモ</div>
+                                <div class="mobile-info-value" style="white-space:pre-wrap; background:#fff; padding:8px; border-radius:8px; border:1px solid #f3ebeb;">${escapeHtml(comp.memo) || '-'}</div>
+                            </div>
+                            <div style="text-align: right; margin-top: 15px; display:flex; gap:8px; justify-content:flex-end;">
+                                <button class="action-btn" onclick="startInlineEdit(${idx})">編集 📝</button>
+                                <button class="action-btn" style="color:#fa5252;" onclick="deleteCompany(${idx})">削除</button>
+                            </div>
                         </div>
                     `;
                 }
-                targetContainer.appendChild(rowDiv);
+                targetContainer.appendChild(cardDiv);
             });
         }
+
+        // アコーディオンの開閉切り替え
+        window.toggleMobileCard = function(index) {
+            const body = document.getElementById(`body-${index}`);
+            const arrow = document.getElementById(`arrow-${index}`);
+            if (!body || !arrow) return;
+            
+            if (body.style.display === 'block') {
+                body.style.display = 'none';
+                arrow.classList.remove('open');
+                if (openCardIndex === index) openCardIndex = null;
+            } else {
+                // 他をすべて閉じて、これだけを開く
+                document.querySelectorAll('.mobile-card-body').forEach(b => b.style.display = 'none');
+                document.querySelectorAll('.mobile-arrow').forEach(a => a.classList.remove('open'));
+                body.style.display = 'block';
+                arrow.classList.add('open');
+                openCardIndex = index;
+            }
+        };
 
         function startInlineEdit(index) { editingIndex = index; renderTable(); }
         function cancelInlineEdit() { editingIndex = null; renderTable(); }
@@ -651,6 +691,7 @@
             if (!newName) { alert("企業名は入れてね！"); return; }
             const isEsDone = document.getElementById(`mob_esDone_${index}`).checked;
             let statusVal = document.getElementById(`mob_status_${index}`).value;
+            
             if (isEsDone && statusVal === 'ES作成中') statusVal = 'ES提出済み';
             else if (!isEsDone && statusVal === 'ES提出済み') statusVal = 'ES作成中';
 
@@ -700,6 +741,7 @@
             saveToFirebase(window.currentUid);
         }
 
+        // 📅 やるべきことタスクの描画
         function renderTodoList() {
             const todoList = document.getElementById('todoList');
             if (!todoList) return;
@@ -888,6 +930,7 @@
             }
         }
 
+        // 新規追加フォームの送信処理
         document.getElementById('companyForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const esFinal = buildDateTimeString('esDeadlineDate', 'esHasTime', 'esHour', 'esMin');
@@ -915,6 +958,7 @@
         function deleteCompany(index) {
             if (confirm(`この企業データを消しちゃっても大丈夫？`)) {
                 if (editingIndex === index) editingIndex = null;
+                if (openCardIndex === index) openCardIndex = null;
                 companies.splice(index, 1);
                 saveToFirebase(window.currentUid);
             }
