@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>就活スケジュール管理アプリ</title>
     
+    <!-- Firebase SDK (v8形式) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
@@ -92,6 +94,9 @@
         .section-add-company { order: 2; }
         .section-company-list { order: 3; }
         
+        /* 今週やるべきことタイトル内のスマホ改行用指定 */
+        .todo-title-text br { display: none; }
+
         /* カレンダー */
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 8px; }
         .calendar-header-cell { text-align: center; font-weight: bold; padding: 4px; background: #ffe3e8; font-size: 0.75rem; border-radius: 6px; color: #ff6b8b;}
@@ -239,6 +244,9 @@
             .status-badge { font-size: 0.7rem; padding: 4px 10px; border-radius: 12px; }
             .btn-cute { font-size: 0.75rem; padding: 6px 12px; border-radius: 20px; }
 
+            /* スマホ時のみ「今週やるべきこと」と「(直近7日以内)」で改行する */
+            .todo-title-text br { display: block; }
+
             /* 【スマホ並び替え】スマホ時はそのまま */
             .flexible-layout-wrapper { display: flex; flex-direction: column; }
             .section-top-row { order: 1; display: block !important; } 
@@ -300,6 +308,7 @@
 
     <div class="container">
         
+        <!-- ヘッダー -->
         <div class="header-area">
             <div id="appTitleDisplay" class="title-editable" onclick="changeAppTitle()">読み込み中...</div>
             <div class="auth-right">
@@ -314,14 +323,17 @@
 
         <div class="flexible-layout-wrapper">
             
+            <!-- 上段セクション (今週やること / カレンダー) -->
             <div class="section-top-row">
                 <div class="pc-top-grid">
+                    <!-- タスク一覧 -->
                     <div class="card">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px;">
-                            <h3 style="margin:0; color:#ff6b8b; font-size:1.0rem; text-align: left;">📅 今週やるべきこと (直近7日以内)</h3>
+                            <h3 class="todo-title-text" style="margin:0; color:#ff6b8b; font-size:1.0rem; text-align: left;">📅 今週やるべきこと<br>(直近7日以内)</h3>
                             <button class="action-btn" onclick="toggleHistoryPopup(event)" style="border-color: var(--primary-pink); color: #ff6b8b; flex-shrink: 0;">済/未リスト 📋</button>
                         </div>
                         
+                        <!-- 済/未リストポップアップ -->
                         <div id="historyListPopup" class="history-list-popup" onclick="event.stopPropagation()">
                             <div style="display: flex; gap: 8px; margin-bottom: 10px; border-bottom: 2px solid var(--bg-pastel); padding-bottom: 6px;">
                                 <button id="tabDoneBtn" class="history-tab-btn active" onclick="switchHistoryTab('done')">済</button>
@@ -337,6 +349,7 @@
                             <button onclick="changeTaskPage(1)" class="action-btn" style="padding:2px 8px;">次 ▶</button>
                         </div>
                     </div>
+                    <!-- カレンダー側 -->
                     <div>
                         <div id="greetingMessage" class="greeting-box">こんにちは✨</div>
                         <div class="card" style="padding: 16px;">
@@ -354,6 +367,7 @@
                 </div>
             </div>
             
+            <!-- 🏢 エントリー企業の追加 -->
             <div class="card section-add-company" style="padding: 12px 16px;">
                 <h3 style="margin-top:0; color:#ff6b8b; font-size:0.9rem; margin-bottom:8px; text-align: left;">🏢 エントリー企業の追加</h3>
                 <form id="companyForm">
@@ -363,6 +377,7 @@
                         <div><label>マイページURL</label><input type="url" id="mypageUrl" placeholder="https://..."></div>
                         <div><label>マイページID</label><input type="text" id="mypageId"></div>
                         
+                        <!-- ES締切日 -->
                         <div class="date-time-card-box flex-wide">
                             <label style="color:#ff6b8b;">ES締切日</label>
                             <input type="date" id="esDeadlineDate">
@@ -372,6 +387,7 @@
                             </div>
                         </div>
                         
+                        <!-- 次回の予定日時 -->
                         <div class="date-time-card-box flex-wide">
                             <label style="color:#ff6b8b;">次回予定/日時</label>
                             <select id="nextDateType" style="margin-bottom:2px; padding: 2px 4px;">
@@ -407,12 +423,14 @@
                 </form>
             </div>
             
+            <!-- 📊 登録企業一覧 -->
             <div class="card section-company-list">
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
                     <h3 style="margin:0; color:#ff6b8b; font-size:1.0rem; text-align: left;">📊 登録企業一覧</h3>
                     <input type="text" id="searchBox" placeholder="企業名で探す... 🔍" oninput="renderTable()" style="max-width:220px; padding:6px 12px; border-radius:20px; width:100%;">
                 </div>
                 
+                <!-- 💻 パソコン用：従来のテーブル表示 -->
                 <div class="table-responsive">
                     <table>
                         <thead>
@@ -430,6 +448,7 @@
                     </table>
                 </div>
 
+                <!-- 📱 スマホ用 -->
                 <div id="mobileCompanyList" class="mobile-company-list-wrapper"></div>
             </div>
 
@@ -1124,7 +1143,7 @@
             });
 
             if (totalTasks === 0) {
-                todoList.innerHTML = '<li class="todo-empty">直近7日以内の予定はないよ。のんびりいこう〜☕️</li>';
+                todoList.innerHTML = '<li class="todo-empty">直近7日い内の予定はないよ。のんびりいこう〜☕️</li>';
                 pagContainer.style.display = 'none';
             }
         }
@@ -1265,7 +1284,7 @@
                 editDiv.className = 'history-edit-box';
                 editDiv.setAttribute('onclick', 'event.stopPropagation()'); // クリックによる閉じ防止
                 editDiv.innerHTML = `
-                    <span style="font-size:0.7rem; color:var(--text-dark);">状態を変更:</span>
+                    <span style="font-size:0.7rem; color:var(--text-dark);">状態：</span>
                     <select class="history-edit-select" onchange="changeHistoryStatusInline(event, ${compIdx}, '${taskType}')">
                         <option value="済" ${currentVal === '済' ? 'selected' : ''}>済</option>
                         <option value="未" ${currentVal === '未' ? 'selected' : ''}>未</option>
