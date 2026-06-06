@@ -44,7 +44,7 @@
         .card {
             background: white; border-radius: 20px; padding: 24px; margin-bottom: 24px;
             box-shadow: 0 8px 16px rgba(255, 183, 197, 0.15); border: 2px solid var(--border-soft);
-            box-sizing: border-box; width: 100%;
+            box-sizing: border-box; width: 100%; position: relative;
         }
         
         /* ヘッダーエリア */
@@ -101,7 +101,7 @@
         .calendar-cell.other-month { background: #fdfafb; color: #cbd5e1; border-color: #f1f5f9; }
         .calendar-cell.today { border: 2px solid #ff6b8b; background: #fff0f3; }
         .calendar-day-num { font-weight: bold; font-size: 0.75rem; margin-left: 2px;}
-        .calendar-dots { display: flex; gap: 3px; justify-content: center; margin-top: 2px; }
+        .calendar-dots { display: flex; gap: 3px; justify-content: center; margin-top: 2px; flex-wrap: wrap; }
         .cal-dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; cursor: pointer; border: 1px solid rgba(0, 0, 0, 0.05); }
         
         /* カレンダーポップアップ */
@@ -129,9 +129,21 @@
         .btn-task-yet { background: #adb5bd; color: white; }
         .pagination-container { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 10px; font-size: 0.8rem; font-weight: bold; }
         
-        /* ===================================================
-           📊 表形式（テーブル表示）用の基本スタイル
-           =================================================== */
+        /* 済/未リストポップアップスタイル */
+        .history-list-popup {
+            position: absolute; top: 50px; right: 24px; background: white; border: 2px solid var(--primary-pink);
+            border-radius: 14px; box-shadow: 0 6px 20px rgba(255, 183, 197, 0.25); width: 280px; max-height: 350px;
+            overflow-y: auto; z-index: 2000; padding: 12px; display: none; text-align: left;
+        }
+        .history-tab-btn {
+            padding: 4px 12px; font-size: 0.8rem; font-weight: bold; border-radius: 10px; border: 1px solid var(--border-soft);
+            background: #fff; cursor: pointer; color: var(--text-dark);
+        }
+        .history-tab-btn.active { background: var(--primary-pink); color: white; border-color: var(--primary-pink); }
+        .history-item-row { font-size: 0.75rem; padding: 6px 4px; border-bottom: 1px dashed #ffe3e8; word-break: break-all; }
+        .history-item-row:last-child { border-bottom: none; }
+
+        /* 表形式（テーブル表示）用の基本スタイル */
         .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 10px; }
         table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; min-width: 950px; }
         th, td { padding: 12px 10px; border-bottom: 1px solid var(--border-soft); box-sizing: border-box; }
@@ -216,13 +228,13 @@
             .status-badge { font-size: 0.7rem; padding: 4px 10px; border-radius: 12px; }
             .btn-cute { font-size: 0.75rem; padding: 6px 12px; border-radius: 20px; }
 
-            /* 【スマホ並び替え】スマホ時はそのまま（1:今週やること ➔ 2:企業一覧 ➔ 3:企業追加） */
+            /* 【スマホ並び替え】スマホ時はそのまま */
             .flexible-layout-wrapper { display: flex; flex-direction: column; }
             .section-top-row { order: 1; display: block !important; } 
             .section-company-list { order: 2; }  
             .section-add-company { order: 3; }  
 
-            /* スマホの時は、上段グリッドのうちカレンダー側（あいさつとカレンダーカード）のみを非表示にする */
+            /* スマホの時は、上段グリッドのうちカレンダー側のみを非表示にする */
             .pc-top-grid { grid-template-columns: 1fr; gap: 0; }
             .pc-top-grid > div:last-child { display: none !important; }
 
@@ -268,6 +280,8 @@
             }
             textarea { height: 38px; }
             #companyForm button[type="submit"] { width: 100%; padding: 10px; font-size: 0.85rem; margin-top: 4px; }
+            
+            .history-list-popup { right: 8px; left: 8px; width: auto; top: 55px; }
         }
     </style>
 </head>
@@ -295,7 +309,20 @@
                 <div class="pc-top-grid">
                     <!-- タスク一覧 -->
                     <div class="card">
-                        <h3 style="margin-top:0; color:#ff6b8b; font-size:1.0rem; margin-bottom: 12px; text-align: left;">📅 今週やるべきこと (直近7日以内)</h3>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <h3 style="margin:0; color:#ff6b8b; font-size:1.0rem; text-align: left;">📅 今週やるべきこと (直近7日以内)</h3>
+                            <button class="action-btn" onclick="toggleHistoryPopup(event)" style="border-color: var(--primary-pink); color: #ff6b8b;">済/未リスト 📋</button>
+                        </div>
+                        
+                        <!-- 済/未リストポップアップ -->
+                        <div id="historyListPopup" class="history-list-popup" onclick="event.stopPropagation()">
+                            <div style="display: flex; gap: 8px; margin-bottom: 10px; border-bottom: 2px solid var(--bg-pastel); padding-bottom: 6px;">
+                                <button id="tabDoneBtn" class="history-tab-btn active" onclick="switchHistoryTab('done')">済</button>
+                                <button id="tabYetBtn" class="history-tab-btn" onclick="switchHistoryTab('yet')">未</button>
+                            </div>
+                            <div id="historyItemsContainer"></div>
+                        </div>
+
                         <ul id="todoList" class="todo-list"></ul>
                         <div id="taskPagination" class="pagination-container" style="display: none;">
                             <button onclick="changeTaskPage(-1)" class="action-btn" style="padding:2px 8px;">◀ 前</button>
@@ -303,7 +330,7 @@
                             <button onclick="changeTaskPage(1)" class="action-btn" style="padding:2px 8px;">次 ▶</button>
                         </div>
                     </div>
-                    <!-- カレンダー側（スマホ時は自動的に非表示） -->
+                    <!-- カレンダー側 -->
                     <div>
                         <div id="greetingMessage" class="greeting-box">こんにちは✨</div>
                         <div class="card" style="padding: 16px;">
@@ -321,7 +348,7 @@
                 </div>
             </div>
             
-            <!-- 🏢 エントリー企業の追加 (PCでは2番目、スマホでは3番目に配置) -->
+            <!-- 🏢 エントリー企業の追加 -->
             <div class="card section-add-company" style="padding: 12px 16px;">
                 <h3 style="margin-top:0; color:#ff6b8b; font-size:0.9rem; margin-bottom:8px; text-align: left;">🏢 エントリー企業の追加</h3>
                 <form id="companyForm">
@@ -377,7 +404,7 @@
                 </form>
             </div>
             
-            <!-- 📊 登録企業一覧 (PCでは3番目、スマホでは2番目に配置) -->
+            <!-- 📊 登録企業一覧 -->
             <div class="card section-company-list">
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
                     <h3 style="margin:0; color:#ff6b8b; font-size:1.0rem; text-align: left;">📊 登録企業一覧</h3>
@@ -437,6 +464,7 @@
         const tasksPerPage = 5;
 
         let mobileOpenedIndices = new Set();
+        let currentHistoryTab = 'done'; // 'done' or 'yet'
 
         function initTimeSelectsForElement(hEl, mEl) {
             if(hEl && hEl.options.length === 0) {
@@ -575,6 +603,7 @@
             renderTable();
             renderTodoList();
             renderCalendar();
+            renderHistoryPopupContents();
         }
 
         function formatMypageUrlText(url) {
@@ -631,9 +660,7 @@
 
             filteredCompanies.forEach(({ comp, idx }) => {
                 
-                // ==========================================
-                // 💻 パソコン用テーブル行
-                // ==========================================
+                // パソコン用テーブル行
                 const tr = document.createElement('tr');
                 tr.className = 'status-row-white';
 
@@ -794,9 +821,7 @@
                 tbody.appendChild(tr);
 
 
-                // ==========================================
-                // 📱 スマホ用アコーディオンカード型
-                // ==========================================
+                // スマホ用アコーディオンカード型
                 const mCard = document.createElement('div');
                 mCard.id = `m-card-${idx}`;
                 mCard.className = 'm-comp-card';
@@ -1112,6 +1137,7 @@
             }
         }
         function closeTaskAction(e, id) { e.stopPropagation(); const el = document.getElementById(id); if (el) el.style.display = 'none'; }
+        
         function completeTask(e, companyIdx, taskType) {
             e.stopPropagation();
             if (taskType === 'ES') companies[companyIdx].esTaskCompleted = true;
@@ -1120,12 +1146,93 @@
         }
         function changeTaskPage(offset) { currentTaskPage += offset; if (currentTaskPage < 1) currentTaskPage = 1; renderTodoList(); }
 
-        function changeMonth(offset) { currentCalendarDate.setMonth(currentCalendarDate.getMonth() + offset); renderCalendar(); }
-        
-        function resetToTodayMonth() {
-            currentCalendarDate = new Date();
-            renderCalendar();
+        // 済/未リストポップアップの開閉
+        window.toggleHistoryPopup = function(e) {
+            e.stopPropagation();
+            const pop = document.getElementById('historyListPopup');
+            if (pop) {
+                const isOpen = pop.style.display === 'block';
+                pop.style.display = isOpen ? 'none' : 'block';
+                if (!isOpen) renderHistoryPopupContents();
+            }
+        };
+
+        window.switchHistoryTab = function(tabName) {
+            currentHistoryTab = tabName;
+            document.getElementById('tabDoneBtn').classList.toggle('active', tabName === 'done');
+            document.getElementById('tabYetBtn').classList.toggle('active', tabName === 'yet');
+            renderHistoryPopupContents();
+        };
+
+        function renderHistoryPopupContents() {
+            const container = document.getElementById('historyItemsContainer');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const now = new Date();
+
+            if (currentHistoryTab === 'done') {
+                // 【済】条件: ①ボタンで完了にした予定 ②提出済チェックを入れたES
+                let doneItems = [];
+                companies.forEach(comp => {
+                    if (comp.esDone) {
+                        doneItems.push(`ES: ${escapeHtml(comp.name)}`);
+                    } else if (comp.esTaskCompleted) {
+                        doneItems.push(`ES完了: ${escapeHtml(comp.name)}`);
+                    }
+                    if (comp.interviewTaskCompleted) {
+                        const type = comp.nextDateType ? comp.nextDateType : '予定';
+                        doneItems.push(`${escapeHtml(type)}完了: ${escapeHtml(comp.name)}`);
+                    }
+                });
+
+                if (doneItems.length === 0) {
+                    container.innerHTML = '<div style="font-size:0.75rem; color:#868e96; text-align:center; padding:10px;">完了したタスクはありません</div>';
+                } else {
+                    doneItems.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'history-item-row';
+                        div.textContent = `✅ ${item}`;
+                        container.appendChild(div);
+                    });
+                }
+            } else {
+                // 【未】条件: ①期限を過ぎて完了してない選考予定 ②期限を過ぎて未提出・未完了のES
+                let yetItems = [];
+                companies.forEach(comp => {
+                    if (comp.status === '不合格') return;
+
+                    if (comp.esDeadline && !comp.esDone && !comp.esTaskCompleted) {
+                        const cleanStr = comp.esDeadline.includes(" ") ? comp.esDeadline.replace(/-/g, "/") : comp.esDeadline.replace(/-/g, "/") + " 23:59";
+                        if (new Date(cleanStr) < now) {
+                            yetItems.push(`ES超過: ${escapeHtml(comp.name)} (${comp.esDeadline})`);
+                        }
+                    }
+                    if (comp.interviewDate && !comp.interviewTaskCompleted) {
+                        const cleanStr = comp.interviewDate.includes(" ") ? comp.interviewDate.replace(/-/g, "/") : comp.interviewDate.replace(/-/g, "/") + " 23:59";
+                        if (new Date(cleanStr) < now) {
+                            const type = comp.nextDateType ? comp.nextDateType : '予定';
+                            yetItems.push(`${escapeHtml(type)}超過: ${escapeHtml(comp.name)} (${comp.interviewDate})`);
+                        }
+                    }
+                });
+
+                if (yetItems.length === 0) {
+                    container.innerHTML = '<div style="font-size:0.75rem; color:#868e96; text-align:center; padding:10px;">期限を過ぎた未完了タスクはありません</div>';
+                } else {
+                    yetItems.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'history-item-row';
+                        div.style.color = '#fa5252';
+                        div.textContent = `⚠️ ${item}`;
+                        container.appendChild(div);
+                    });
+                }
+            }
         }
+
+        function changeMonth(offset) { currentCalendarDate.setMonth(currentCalendarDate.getMonth() + offset); renderCalendar(); }
+        function resetToTodayMonth() { currentCalendarDate = new Date(); renderCalendar(); }
 
         window.togglePopupInCell = function(e, cellIdx) {
             e.stopPropagation();
@@ -1136,7 +1243,11 @@
             if (targetPopup && !alreadyOpen) { targetPopup.style.display = 'block'; }
         };
         
-        document.addEventListener('click', () => { document.querySelectorAll('.calendar-popup').forEach(p => p.style.display = 'none'); });
+        document.addEventListener('click', () => { 
+            document.querySelectorAll('.calendar-popup').forEach(p => p.style.display = 'none'); 
+            const historyPop = document.getElementById('historyListPopup');
+            if (historyPop) historyPop.style.display = 'none';
+        });
 
         function getDotColor(status) {
             switch(status) {
@@ -1193,18 +1304,25 @@
                 
                 companies.forEach(comp => {
                     if (comp.status === '不合格') return;
-                    if (comp.esDeadline && !comp.esDone && comp.esDeadline.startsWith(compStr)) dayEvents.push({ text: `🎀 ES期限: ${comp.name}`, status: comp.status });
-                    if (comp.interviewDate && comp.interviewDate.startsWith(compStr)) dayEvents.push({ text: `🐾 ${comp.nextDateType || '予定'}: ${comp.name}`, status: comp.status });
+                    if (comp.esDeadline && !comp.esDone && comp.esDeadline.startsWith(compStr)) {
+                        dayEvents.push({ text: `🎀 ES期限: ${comp.name}`, status: comp.status });
+                    }
+                    if (comp.interviewDate && comp.interviewDate.startsWith(compStr)) {
+                        dayEvents.push({ text: `🐾 ${comp.nextDateType || '予定'}: ${comp.name}`, status: comp.status });
+                    }
                 });
                 
                 if (dayEvents.length > 0) {
-                    const clickInfo = dayEvents.map(e => e.text).join('<br>');
-                    const dot = document.createElement('span');
-                    dot.className = `cal-dot`;
-                    dot.style.backgroundColor = getDotColor(dayEvents[0].status || '未エントリー');
-                    dot.setAttribute('onclick', `togglePopupInCell(event, ${i})`);
-                    dotsContainer.appendChild(dot);
+                    // 予定ごとに丸（ドット）を生成して追加
+                    dayEvents.forEach(ev => {
+                        const dot = document.createElement('span');
+                        dot.className = `cal-dot`;
+                        dot.style.backgroundColor = getDotColor(ev.status || '未エントリー');
+                        dot.setAttribute('onclick', `togglePopupInCell(event, ${i})`);
+                        dotsContainer.appendChild(dot);
+                    });
                     
+                    const clickInfo = dayEvents.map(e => e.text).join('<br>');
                     const popDiv = document.createElement('div');
                     popDiv.id = `popup-${i}`; popDiv.className = 'calendar-popup'; popDiv.innerHTML = clickInfo;
                     cell.appendChild(popDiv);
