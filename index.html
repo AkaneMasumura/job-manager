@@ -3,412 +3,714 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>就活タスク管理アプリ</title>
+    <title>就活スケジュール管理アプリ</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+
     <style>
         :root {
-            --bg-pink: #fff0f3;
-            --main-pink: #ff85a2;
-            --dark-pink: #ff4d6d;
-            --text-dark: #4a5568;
-            --border-color: #ffe5ec;
+            --primary-pink: #ffb7c5;
+            --bg-pastel: #fff5f6;
+            --border-soft: #fecdd3;
+            --text-dark: #5c4d50;
+            
+            /* 選考ステータスごとの背景色定義 */
+            --status-white: #ffffff;
+            --status-pink: #ffe3e8;
+            --status-yellow: #fff9db;
+            --status-green: #e6fcf5;
+            --status-purple: #f3f0ff;
+            --status-gray: #f1f3f5;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
         body {
-            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
-            background-color: var(--bg-pink);
+            font-family: 'M PLUS Rounded 1c', sans-serif;
+            background-color: var(--bg-pastel);
             color: var(--text-dark);
+            margin: 0;
             padding: 20px;
             line-height: 1.6;
         }
-        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(255,133,162,0.1); }
-        h1 { text-align: center; color: var(--dark-pink); margin-bottom: 30px; font-size: 2rem; position: relative; }
-        h1::after { content: '🐾'; position: absolute; margin-left: 10px; font-size: 1.5rem; }
-        .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; }
-        @media (max-width: 900px) { .grid-layout { grid-template-columns: 1fr; } }
-        .card { background: #fff; border: 2px solid var(--border-color); padding: 25px; border-radius: 16px; position: relative; }
-        .card-title { font-size: 1.2rem; color: var(--dark-pink); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; border-bottom: 2px dashed var(--border-color); padding-bottom: 8px; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 0.9rem; }
-        .form-control { width: 100%; padding: 10px 14px; border: 2px solid var(--border-color); border-radius: 10px; font-size: 0.95rem; transition: all 0.3s; }
-        .form-control:focus { outline: none; border-color: var(--main-pink); box-shadow: 0 0 0 3px rgba(255,133,162,0.1); }
-        .row-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .btn { display: inline-block; width: 100%; padding: 12px; background: var(--main-pink); color: white; border: none; border-radius: 10px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: background 0.2s, transform 0.1s; text-align: center; }
-        .btn:hover { background: var(--dark-pink); }
-        .btn:active { transform: scale(0.98); }
         
-        .todo-section { background: #fffdf0; border: 2px solid #fff3bf; }
-        .todo-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-        .todo-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-left: 5px solid; border-radius: 8px; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.04); font-size: 0.9rem; position: relative; cursor: pointer; overflow: hidden; }
-        .todo-empty { text-align: center; padding: 20px; color: #868e96; font-size: 0.9rem; list-style: none; }
-        .task-action-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: none; justify-content: center; align-items: center; gap: 15px; z-index: 10; }
-        .btn-task-action { padding: 6px 20px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
-        .btn-task-done { background: #4dabf7; color: white; }
-        .btn-task-yet { background: #e2e8f0; color: var(--text-dark); }
-        .task-pagination { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 15px; font-size: 0.85rem; }
-        .btn-pag { background: none; border: 1px solid #dee2e6; padding: 4px 10px; border-radius: 4px; cursor: pointer; }
-
-        .calendar-section { background: white; border: 2px solid #e2e8f0; border-radius: 16px; padding: 20px; }
-        .calendar-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-        .calendar-header-cell { text-align: center; font-weight: bold; font-size: 0.8rem; padding: 5px 0; background: #f8fafc; border-radius: 4px; }
-        .calendar-cell { border: 1px solid #f1f5f9; min-height: 55px; padding: 4px; display: flex; flex-direction: column; justify-content: space-between; border-radius: 6px; position: relative; background: #fff; }
-        .calendar-cell.other-month { opacity: 0.4; background: #f8fafc; }
-        .calendar-cell.today { background: #fff0f3; border: 1px solid var(--main-pink); }
-        .calendar-day-num { font-size: 0.75rem; font-weight: bold; color: #64748b; }
-        .calendar-cell.today .calendar-day-num { color: var(--dark-pink); }
-        .calendar-dots { display: flex; gap: 2px; flex-wrap: wrap; margin-top: auto; }
-        .cal-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; cursor: pointer; }
-        .calendar-popup { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #334155; color: white; padding: 8px 12px; border-radius: 8px; font-size: 0.75rem; z-index: 100; display: none; width: max-content; max-width: 180px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); line-height: 1.4; }
-        .calendar-popup::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 6px solid transparent; border-top-color: #334155; }
-
-        .history-btn-container { position: absolute; top: 20px; right: 25px; }
-        .btn-history-trigger { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 4px 10px; border-radius: 8px; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; gap: 4px; }
-        .history-list-popup { position: absolute; top: 100%; right: 0; width: 280px; background: white; border: 1px solid #cbd5e1; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: none; z-index: 200; padding: 10px; margin-top: 5px; }
-        .history-tabs { display: flex; border-bottom: 1px solid #e2e8f0; margin-bottom: 8px; }
-        .history-tab { flex: 1; text-align: center; font-size: 0.75rem; padding: 6px 0; cursor: pointer; color: #94a3b8; }
-        .history-tab.active { color: var(--dark-pink); font-weight: bold; border-bottom: 2px solid var(--dark-pink); }
-        .history-items-container { max-height: 220px; overflow-y: auto; }
+        .container { max-width: 1200px; margin: 0 auto; }
         
-        /* 修正点1: 状態とセレクトボックスを完全に横書き（一行）にするスタイル */
-        .history-edit-box { display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; vertical-align: middle; }
-        .history-edit-select { padding: 1px 4px; font-size: 0.75rem; border-radius: 4px; border: 1px solid #cbd5e1; background: white; }
-        .history-item-row { padding: 6px 4px; cursor: pointer; border-bottom: 1px solid #f1f5f9; font-size: 0.75rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: nowrap; }
+        /* カード共通スタイル */
+        .card {
+            background: white; border-radius: 20px; padding: 24px; margin-bottom: 24px;
+            box-shadow: 0 8px 16px rgba(255, 183, 197, 0.15); border: 2px solid var(--border-soft);
+            box-sizing: border-box; width: 100%; position: relative;
+        }
+        
+        /* ヘッダーエリア */
+        .header-area {
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
+            gap: 15px; margin-bottom: 25px; background: white; padding: 16px 24px;
+            border-radius: 20px; border: 2px solid var(--border-soft); box-sizing: border-box;
+        }
+        
+        .title-editable {
+            font-size: 1.8rem; font-weight: 700; color: #ff6b8b; cursor: pointer;
+            padding: 4px 12px; border-radius: 12px; transition: all 0.2s; border: 2px dashed transparent;
+        }
+        .title-editable:hover { background: #fff0f3; border-color: var(--primary-pink); }
+        
+        .auth-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+        .auth-top-row { display: flex; align-items: center; gap: 12px; }
+        .user-email-display { font-size: 0.75rem; color: #a08a8e; font-weight: bold; padding-right: 6px; }
+        
+        /* ボタン */
+        .btn-cute {
+            background-color: var(--primary-pink); color: white; border: none; padding: 10px 20px;
+            border-radius: 30px; cursor: pointer; font-weight: bold; font-size: 0.9rem;
+            box-shadow: 0 4px 0px #e09ba9; transition: all 0.1s ease;
+        }
+        .btn-cute:active { transform: translateY(4px); box-shadow: none; }
+        .btn-login { background-color: #a5d8ff; box-shadow: 0 4px 0px #82b1d6; }
+        .btn-logout { background-color: #ffc9c9; box-shadow: 0 4px 0px #dba0a0; }
+        
+        .status-badge { font-size: 0.8rem; font-weight: bold; padding: 6px 14px; border-radius: 20px; background: #f1f3f5; border: 1px solid #dee2e6; }
+        
+        /* あいさつボックス */
+        .greeting-box {
+            background: linear-gradient(135deg, #fff0f3 0%, #ffe3e8 100%); border: 2px dotted #ff85a2;
+            padding: 12px 14px; text-align: center; font-size: 1rem; font-weight: bold;
+            border-radius: 16px; margin-bottom: 15px; color: #de5c78; line-height: 1.4;
+            animation: fuwafuwa 3s infinite ease-in-out;
+        }
+        @keyframes fuwafuwa { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 
-        .desktop-table-container { margin-top: 30px; overflow-x: auto; background: white; border-radius: 12px; border: 2px solid var(--border-color); }
-        .company-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem; min-width: 900px; }
-        .company-table th { background: #fff0f3; color: var(--dark-pink); padding: 14px; font-weight: bold; border-bottom: 2px solid var(--border-color); }
-        .company-table td { padding: 12px 14px; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
-        .company-table tbody tr:hover { background-color: #fffbfb; }
+        /* PC・共通レイアウト */
+        .flexible-layout-wrapper { display: flex; flex-direction: column; }
+        .pc-top-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 24px; align-items: start; }
+        
+        /* 【PC上での配置順】 1: 今週のタスク ➔ 2: 企業追加 ➔ 3: 企業一覧 */
+        .section-top-row { order: 1; }
+        .section-add-company { order: 2; }
+        .section-company-list { order: 3; }
+        
+        /* カレンダー */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 8px; }
+        .calendar-header-cell { text-align: center; font-weight: bold; padding: 4px; background: #ffe3e8; font-size: 0.75rem; border-radius: 6px; color: #ff6b8b;}
+        .calendar-cell { background: #fff; border: 1px solid var(--border-soft); min-height: 44px; padding: 2px; position: relative; border-radius: 6px; }
+        .calendar-cell.other-month { background: #fdfafb; color: #cbd5e1; border-color: #f1f5f9; }
+        .calendar-cell.today { border: 2px solid #ff6b8b; background: #fff0f3; }
+        .calendar-day-num { font-weight: bold; font-size: 0.75rem; margin-left: 2px;}
+        .calendar-dots { display: flex; gap: 3px; justify-content: center; margin-top: 2px; flex-wrap: wrap; }
+        .cal-dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; cursor: pointer; border: 1px solid rgba(0, 0, 0, 0.05); }
+        
+        /* カレンダーポップアップ */
+        .calendar-popup {
+            position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%);
+            background: white; border: 2px solid var(--primary-pink); padding: 8px 10px;
+            border-radius: 10px; box-shadow: 0 4px 12px rgba(255, 183, 197, 0.3); z-index: 1000;
+            display: none; font-size: 0.75rem; min-width: 150px; max-width: 200px; text-align: left; word-break: break-all;
+        }
+        .calendar-popup::after { content: ""; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border-width: 6px; border-style: solid; border-color: white transparent transparent transparent; }
+        .calendar-popup::before { content: ""; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border-width: 8px; border-style: solid; border-color: var(--primary-pink) transparent transparent transparent; z-index: -1; }
+        
+        /* タスクリスト */
+        .todo-list { list-style: none; padding: 0; margin: 0; }
+        .todo-item {
+            padding: 10px 14px; margin-bottom: 8px; border-left: 6px solid #ccc;
+            border-radius: 8px; font-size: 0.85rem; background: #fefefe;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02); cursor: pointer; transition: background 0.2s; position: relative;
+        }
+        .todo-item:hover { background: #fff0f2; }
+        .todo-empty { color: #868e96; font-size: 0.85rem; font-style: italic; text-align: center; padding: 20px 0; }
+        .task-action-overlay { display: none; gap: 8px; margin-top: 6px; background: #fff5f6; padding: 6px; border-radius: 8px; border: 1px dashed var(--primary-pink); }
+        .btn-task-action { padding: 2px 10px; font-size: 0.75rem; border-radius: 12px; cursor: pointer; font-weight: bold; border: none; }
+        .btn-task-done { background: #40c057; color: white; }
+        .btn-task-yet { background: #adb5bd; color: white; }
+        .pagination-container { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 10px; font-size: 0.8rem; font-weight: bold; }
+        
+        /* 済/未リストポップアップスタイル */
+        .history-list-popup {
+            position: absolute; top: 50px; right: 24px; background: white; border: 2px solid var(--primary-pink);
+            border-radius: 14px; box-shadow: 0 6px 20px rgba(255, 183, 197, 0.25); width: 280px; max-height: 350px;
+            overflow-y: auto; z-index: 2000; padding: 12px; display: none; text-align: left;
+        }
+        .history-tab-btn {
+            padding: 4px 12px; font-size: 0.8rem; font-weight: bold; border-radius: 10px; border: 1px solid var(--border-soft);
+            background: #fff; cursor: pointer; color: var(--text-dark);
+        }
+        .history-tab-btn.active { background: var(--primary-pink); color: white; border-color: var(--primary-pink); }
+        
+        /* 済/未リスト内の各行のスタイル */
+        .history-item-row {
+            font-size: 0.75rem; padding: 8px 4px; border-bottom: 1px dashed #ffe3e8;
+            color: var(--text-dark); cursor: pointer; transition: background 0.2s;
+        }
+        .history-item-row:hover { background: #fff0f2; }
+        .history-item-row:last-child { border-bottom: none; }
+        
+        /* インライン変更用の簡易フォームエリア */
+        .history-edit-box {
+            display: flex; gap: 6px; align-items: center; margin-top: 4px;
+            background: #fff5f6; padding: 4px; border-radius: 6px; border: 1px dashed var(--primary-pink);
+        }
+        .history-edit-select { padding: 2px; font-size: 0.75rem; border-radius: 4px; border: 1px solid var(--border-soft); }
 
-        .mobile-cards-container { display: none; margin-top: 20px; flex-direction: column; gap: 15px; }
-        .mobile-comp-card { background: white; border: 2px solid var(--border-color); border-radius: 14px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
-        .mob-row { margin-bottom: 8px; font-size: 0.85rem; display: flex; }
-        .mob-label { width: 85px; font-weight: bold; color: #718096; flex-shrink: 0; }
-        .mob-val { flex-grow: 1; word-break: break-all; }
-
-        @media (max-width: 768px) {
-            .desktop-table-container { display: none; }
-            .mobile-cards-container { display: flex; }
-            body { padding: 10px; }
-            .container { padding: 15px; border-radius: 14px; }
+        /* 表形式（テーブル表示）用の基本スタイル */
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; min-width: 950px; }
+        th, td { padding: 12px 10px; border-bottom: 1px solid var(--border-soft); box-sizing: border-box; }
+        th { background-color: #fff0f2; color: #ff6b8b; font-weight: bold; }
+        tr:hover { background-color: rgba(255, 183, 197, 0.05); }
+        
+        /* 企業名・URLなどの個別パーツ調整 */
+        .comp-name-black { color: #000000 !important; text-decoration: none; }
+        .comp-name-black.has-link { text-decoration: none; }
+        .comp-name-black.has-link:hover { text-decoration: underline; }
+        
+        /* マイページ情報のスタイル（下線を引かない） */
+        .mypage-inline-info { color: #000000 !important; font-weight: normal; display: flex; flex-direction: column; gap: 2px; }
+        .mypage-inline-info a { color: #000000 !important; text-decoration: none; font-weight: bold; }
+        .mypage-inline-info a:hover { text-decoration: underline; }
+        .mypage-id-label { font-size: 0.75rem; color: #5c4d50; }
+        
+        /* 2行構成用スタイル */
+        .two-line-cell { display: flex; flex-direction: column; gap: 2px; }
+        .small-sub-text { font-size: 0.75rem; color: #868e96; }
+        
+        /* メモ専用のボックススタイル */
+        .memo-limited-box {
+            font-size: 0.75rem; color: #6e5d60; white-space: pre-wrap; 
+            background: rgba(255, 255, 255, 0.6); padding: 4px 6px; border-radius: 6px; 
+            margin-top: 2px; width: 100%; box-sizing: border-box; word-break: break-all;
         }
 
-        .badge-status { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; text-align: center; }
-        .status-not-started { background: #e2e8f0; color: #4a5568; }
-        .status-es-writing { background: #ffdee5; color: #ff4d6d; }
-        .status-es-submitted { background: #ffccd5; color: #ff4d6d; }
-        .status-interview { background: #fff3bf; color: #d9480f; }
-        .status-intern { background: #c3fae8; color: #0ca678; }
-        .status-waiting { background: #e0f2fe; color: #0369a1; }
-        .status-accepted { background: #f3d9fa; color: #b197fc; }
-        .status-rejected { background: #f8d7da; color: #721c24; }
+        /* 🏢 企業の追加：1行にまとめる用のレイアウト */
+        .form-row-single {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            flex-wrap: nowrap;
+            width: 100%;
+        }
+        .form-row-single > div {
+            flex: 1;
+            min-width: 0; /* レスポンシブ縮小用 */
+        }
+        /* 横幅にメリハリをつける調整 */
+        .form-row-single > .flex-wide { flex: 1.4; }
+        .form-row-single > .flex-narrow { flex: 0.8; }
 
-        .time-toggle-container { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 0.8rem; color: #718096; }
-        .time-select-inputs { display: none; align-items: center; gap: 4px; margin-top: 6px; }
-        .time-select-inputs select { padding: 4px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.85rem; }
+        .date-time-card-box { border: 1px solid var(--border-soft); padding: 6px; border-radius: 10px; background: #fffbfb; box-sizing: border-box; width: 100%; }
+        label { display: block; margin-bottom: 2px; font-weight: bold; font-size: 0.75rem; color: #7c6a6e; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        input[type="text"], input[type="date"], input[type="url"], select, textarea {
+            width: 100%; padding: 6px 8px; border: 2px solid var(--border-soft); border-radius: 10px;
+            box-sizing: border-box; font-size: 0.8rem; color: var(--text-dark); background-color: #fffafb; transition: all 0.2s; text-align: left;
+        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary-pink); background-color: #fff; }
+        
+        /* 通常時は色をつけず白背景に統一 */
+        .status-row-white { background-color: #ffffff; }
+        
+        .action-btn { padding: 4px 10px; font-size: 0.75rem; border-radius: 20px; cursor: pointer; background: #fff; border: 2px solid var(--border-soft); color: var(--text-dark); font-weight: bold;}
+        .action-btn:hover { background: #fff0f3; border-color: var(--primary-pink); }
+        .loading-mask { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); display:none; justify-content:center; align-items:center; z-index:9999; font-weight:bold; }
 
-        .inline-edit-row td { background: #fffdfd !important; }
-        .inline-input { width: 100%; padding: 6px; border: 1px solid var(--main-pink); border-radius: 6px; font-size: 0.85rem; }
-        .btn-action-group { display: flex; gap: 6px; }
-        .btn-sm { padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer; border: none; font-weight: bold; }
-        .btn-edit { background: #e2e8f0; color: var(--text-dark); }
-        .btn-save { background: #4dabf7; color: white; }
-        .btn-delete { background: #ff8787; color: white; }
+        .time-box-flex { display: flex; align-items: center; gap: 2px; margin-top: 2px; width: 100%; box-sizing: border-box; }
+        .time-box-flex select { flex: 1; width: 100% !important; min-width: 0; padding: 2px !important; font-size: 0.75rem; }
+
+        /* インライン編集時の一枠用ボックス幅 */
+        .table-edit-box { width: 100% !important; padding: 4px !important; font-size: 0.8rem !important; border-radius: 8px !important; }
+
+        /* スマホ専用のアコーディオン用パーツ（PCでは最初から非表示） */
+        .mobile-company-list-wrapper { display: none; }
+
+        @media (max-width: 950px) {
+            .pc-top-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+        }
+
+        /* ===================================================
+           📱 純粋なスマホ表示時 (680px以下)
+           =================================================== */
+        @media (max-width: 680px) {
+            body { padding: 8px; }
+            .card { padding: 14px; border-radius: 14px; margin-bottom: 12px; width: 100% !important; box-sizing: border-box; }
+            .header-area { padding: 8px 12px; margin-bottom: 12px; border-radius: 14px; width: 100% !important; box-sizing: border-box; }
+            .title-editable { font-size: 1.2rem; padding: 2px 6px; }
+            .status-badge { font-size: 0.7rem; padding: 4px 10px; border-radius: 12px; }
+            .btn-cute { font-size: 0.75rem; padding: 6px 12px; border-radius: 20px; }
+
+            /* 【スマホ並び替え】スマホ時はそのまま */
+            .flexible-layout-wrapper { display: flex; flex-direction: column; }
+            .section-top-row { order: 1; display: block !important; } 
+            .section-company-list { order: 2; }  
+            .section-add-company { order: 3; }  
+
+            /* スマホの時は、上段グリッドのうちカレンダー側のみを非表示にする */
+            .pc-top-grid { grid-template-columns: 1fr; gap: 0; }
+            .pc-top-grid > div:last-child { display: none !important; }
+
+            /* テーブル（表形式）をスマホでは完全に隠し、専用アコーディオンリストに入れ替える */
+            .table-responsive { display: none !important; }
+            .mobile-company-list-wrapper { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+
+            /* スマホ専用企業アコーディオンカード */
+            .m-comp-card {
+                background: #fff; border: 2px solid var(--border-soft); border-radius: 12px;
+                overflow: hidden; box-shadow: 0 2px 6px rgba(255,183,197,0.1);
+            }
+            .m-comp-header {
+                padding: 12px; background: #fff; display: flex; justify-content: space-between;
+                align-items: center; cursor: pointer; font-weight: bold; font-size: 0.95rem; color: #000;
+            }
+            .m-comp-header:active { background: #fff0f2; }
+            .m-comp-arrow { font-size: 0.75rem; color: var(--primary-pink); transition: transform 0.2s; }
+            .m-comp-card.open .m-comp-arrow { transform: rotate(180deg); }
+            
+            .m-comp-body {
+                display: none; padding: 12px; background: #fffbfb; border-top: 1px dashed var(--border-soft);
+                font-size: 0.85rem; text-align: left;
+            }
+            .m-comp-card.open .m-comp-body { display: block; }
+
+            .m-detail-row { display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; border-bottom: 1px dashed rgba(255,183,197,0.3); padding-bottom: 6px; }
+            .m-detail-row:last-child { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
+            .m-detail-label { font-size: 0.75rem; color: #868e96; font-weight: bold; }
+            .m-detail-value { font-size: 0.85rem; color: #000; }
+            .m-detail-value a { color: #000; text-decoration: underline; font-weight: bold; }
+
+            /* スマホフォーム崩れ防止：縦並びに直す */
+            .form-row-single { flex-direction: column; align-items: stretch; gap: 10px; }
+            label { font-size: 0.75rem; margin-bottom: 2px; }
+            
+            .date-time-card-box {
+                padding: 10px; border-radius: 12px; border: 2px solid var(--border-soft);
+                background-color: #fffafb; width: 100% !important; box-sizing: border-box;
+            }
+            input[type="text"], input[type="date"], input[type="url"], select, textarea {
+                padding: 8px 10px; font-size: 0.85rem; border-radius: 12px; width: 100% !important; box-sizing: border-box;
+            }
+            textarea { height: 38px; }
+            #companyForm button[type="submit"] { width: 100%; padding: 10px; font-size: 0.85rem; margin-top: 4px; }
+            
+            .history-list-popup { right: 8px; left: 8px; width: auto; top: 55px; }
+        }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>就活進捗 ＆ タスクマネージャー</h1>
+        
+        <div class="header-area">
+            <div id="appTitleDisplay" class="title-editable" onclick="changeAppTitle()">読み込み中...</div>
+            <div class="auth-right">
+                <div class="auth-top-row">
+                    <span id="syncStatus" class="status-badge">状態確認中...</span>
+                    <button id="btnGoogleLogin" class="btn-cute btn-login" onclick="loginWithGoogle()" style="display: none;">Googleログイン</button>
+                    <button id="btnGoogleLogout" class="btn-cute btn-logout" onclick="logout()" style="display: none;">ログアウト</button>
+                </div>
+                <div id="userEmailDisplay" class="user-email-display"></div>
+            </div>
+        </div>
 
-        <div class="grid-layout">
-            <div class="card">
-                <div class="card-title">🏢 企業エントリー・進捗登録</div>
+        <div class="flexible-layout-wrapper">
+            
+            <div class="section-top-row">
+                <div class="pc-top-grid">
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px;">
+                            <h3 style="margin:0; color:#ff6b8b; font-size:1.0rem; text-align: left;">📅 今週やるべきこと (直近7日以内)</h3>
+                            <button class="action-btn" onclick="toggleHistoryPopup(event)" style="border-color: var(--primary-pink); color: #ff6b8b; flex-shrink: 0;">済/未リスト 📋</button>
+                        </div>
+                        
+                        <div id="historyListPopup" class="history-list-popup" onclick="event.stopPropagation()">
+                            <div style="display: flex; gap: 8px; margin-bottom: 10px; border-bottom: 2px solid var(--bg-pastel); padding-bottom: 6px;">
+                                <button id="tabDoneBtn" class="history-tab-btn active" onclick="switchHistoryTab('done')">済</button>
+                                <button id="tabYetBtn" class="history-tab-btn" onclick="switchHistoryTab('yet')">未</button>
+                            </div>
+                            <div id="historyItemsContainer"></div>
+                        </div>
+
+                        <ul id="todoList" class="todo-list"></ul>
+                        <div id="taskPagination" class="pagination-container" style="display: none;">
+                            <button onclick="changeTaskPage(-1)" class="action-btn" style="padding:2px 8px;">◀ 前</button>
+                            <span id="taskPageNum">1 / 1</span>
+                            <button onclick="changeTaskPage(1)" class="action-btn" style="padding:2px 8px;">次 ▶</button>
+                        </div>
+                    </div>
+                    <div>
+                        <div id="greetingMessage" class="greeting-box">こんにちは✨</div>
+                        <div class="card" style="padding: 16px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 5px;">
+                                <span id="calendarTitle" style="font-weight: bold; font-size:0.9rem; color:#ff6b8b;">----年 --月</span>
+                                <div style="display: flex; align-items: center; gap: 4px;">
+                                    <button onclick="resetToTodayMonth()" class="action-btn" style="padding:2px 4px; font-size:0.8rem; color:#000000;" title="今日に戻る">🔄</button>
+                                    <button onclick="changeMonth(-1)" class="action-btn" style="padding:2px 6px;">◀</button>
+                                    <button onclick="changeMonth(1)" class="action-btn" style="padding:2px 6px;">▶</button>
+                                </div>
+                            </div>
+                            <div id="calendarGrid" class="calendar-grid"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card section-add-company" style="padding: 12px 16px;">
+                <h3 style="margin-top:0; color:#ff6b8b; font-size:0.9rem; margin-bottom:8px; text-align: left;">🏢 エントリー企業の追加</h3>
                 <form id="companyForm">
-                    <div class="form-group">
-                        <label>企業名 *</label>
-                        <input type="text" id="compName" class="form-control" placeholder="例: 株式会社〇〇" required>
-                    </div>
-                    <div class="row-inputs">
-                        <div class="form-group">
-                            <label>企業HPリンク</label>
-                            <input type="url" id="compHp" class="form-control" placeholder="https://...">
-                        </div>
-                        <div class="form-group">
-                            <label>選考ステータス</label>
-                            <select id="selectionStatus" class="form-control">
-                                <option value="未エントリー">未エントリー</option>
-                                <option value="説明会">説明会</option>
-                                <option value="ES作成中">ES作成中</option>
-                                <option value="ES提出済み">ES提出済み</option>
-                                <option value="テスト">テスト</option>
-                                <option value="GD">GD</option>
-                                <option value="一次面接">一次面接</option>
-                                <option value="二次面接">二次面接</option>
-                                <option value="最終面接">最終面接</option>
-                                <option value="インターン">インターン</option>
-                                <option value="結果待ち">結果待ち</option>
-                                <option value="内定">内定</option>
-                                <option value="不合格">不合格</option>
-                                <option value="その他">その他</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="row-inputs">
-                        <div class="form-group">
-                            <label>マイページURL</label>
-                            <input type="url" id="mypageUrl" class="form-control" placeholder="ログイン画面など">
-                        </div>
-                        <div class="form-group">
-                            <label>マイページID / ユーザー名</label>
-                            <input type="text" id="mypageId" class="form-control" placeholder="IDやメアドなど">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>ES提出期限</label>
-                        <input type="date" id="esDeadlineDate" class="form-control">
-                        <div class="time-toggle-container">
-                            <input type="checkbox" id="esHasTime" onchange="toggleTimeInputs('esHasTime', 'esTimeContainer')">
-                            <label style="margin:0; font-weight:normal;" for="esHasTime">時間を指定する</label>
-                        </div>
-                        <div id="esTimeContainer" class="time-select-inputs">
-                            <select id="esHour"></select> 時
-                            <select id="esMin"></select> 分
-                        </div>
-                    </div>
-                    <div class="row-inputs">
-                        <div class="form-group">
-                            <label>次回選考の種類</label>
-                            <select id="nextDateType" class="form-control">
-                                <option value="説明会">説明会</option>
-                                <option value="テスト">テスト</option>
-                                <option value="GD">GD</option>
-                                <option value="一次面接">一次面接</option>
-                                <option value="二次面接">二次面接</option>
-                                <option value="最終面接">最終面接</option>
-                                <option value="インターン">インターン</option>
-                                <option value="その他">その他</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>次回選考の日時</label>
-                            <input type="date" id="interviewDateDate" class="form-control">
-                            <div class="time-toggle-container">
-                                <input type="checkbox" id="interviewHasTime" onchange="toggleTimeInputs('interviewHasTime', 'interviewTimeContainer')">
-                                <label style="margin:0; font-weight:normal;" for="interviewHasTime">時間を指定する</label>
-                            </div>
-                            <div id="interviewTimeContainer" class="time-select-inputs">
-                                <select id="interviewHour"></select> 時
-                                <select id="interviewMin"></select> 分
+                    <div class="form-row-single">
+                        <div class="flex-wide"><label>企業名 *</label><input type="text" id="compName" required placeholder="企業名"></div>
+                        <div><label>HP URL</label><input type="url" id="compHp" placeholder="https://..."></div>
+                        <div><label>マイページURL</label><input type="url" id="mypageUrl" placeholder="https://..."></div>
+                        <div><label>マイページID</label><input type="text" id="mypageId"></div>
+                        
+                        <div class="date-time-card-box flex-wide">
+                            <label style="color:#ff6b8b;">ES締切日</label>
+                            <input type="date" id="esDeadlineDate">
+                            <label style="font-size:0.7rem; margin-top:2px; font-weight:normal; text-align: left;"><input type="checkbox" id="esHasTime" onchange="document.getElementById('esTimeContainer').style.display=this.checked?'flex':'none'"> 時間</label>
+                            <div id="esTimeContainer" class="time-box-flex" style="display:none;">
+                                <select id="esHour"></select>:<select id="esMin"></select>
                             </div>
                         </div>
+                        
+                        <div class="date-time-card-box flex-wide">
+                            <label style="color:#ff6b8b;">次回予定/日時</label>
+                            <select id="nextDateType" style="margin-bottom:2px; padding: 2px 4px;">
+                                <option value="">(なし)</option><option value="説明会">説明会</option><option value="GD">GD</option>
+                                <option value="テスト">テスト</option><option value="一次面接">一次面接</option><option value="二次面接">二次面接</option>
+                                <option value="最終面接">最終面接</option><option value="インターン">インターン</option><option value="その他">その他</option>
+                            </select>
+                            <input type="date" id="interviewDateDate">
+                            <label style="font-size:0.7rem; margin-top:2px; font-weight:normal; text-align: left;"><input type="checkbox" id="interviewHasTime" onchange="document.getElementById('interviewTimeContainer').style.display=this.checked?'flex':'none'"> 時間</label>
+                            <div id="interviewTimeContainer" class="time-box-flex" style="display:none;">
+                                <select id="interviewHour"></select>:<select id="interviewMin"></select>
+                            </div>
+                        </div>
+
+                        <div class="flex-narrow">
+                            <label>ステータス</label>
+                            <select id="selectionStatus">
+                                <option value="未エントリー">未エントリー</option><option value="説明会">説明会</option><option value="ES作成中">ES作成中</option>
+                                <option value="ES提出済み">ES提出済み</option><option value="テスト">テスト</option><option value="GD">GD</option>
+                                <option value="一次面接">一次面接</option><option value="二次面接">二次面接</option><option value="最終面接">最終面接</option>
+                                <option value="インターン">インターン</option><option value="結果待ち">結果待ち</option><option value="内定">内定</option>
+                                <option value="不合格">不合格</option><option value="その他">その他</option>
+                            </select>
+                        </div>
+                        <div class="flex-wide">
+                            <label>メモ</label>
+                            <input type="text" id="memo" placeholder="準備など">
+                        </div>
+                        <div style="flex:none;">
+                            <button type="submit" class="btn-cute" style="padding: 6px 14px; font-size: 0.8rem; border-radius: 10px; box-shadow: 0 2px 0px #e09ba9;">追加 ✨</button>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>メモ・備忘録</label>
-                        <textarea id="memo" class="form-control" rows="2" placeholder="面接のURL、学んだこと、次回タスクなど自由に入力"></textarea>
-                    </div>
-                    <button type="submit" class="btn">企業を追加する ✨</button>
                 </form>
             </div>
-
-            <div class="card todo-section">
-                <div class="card-title">
-                    📅 今週やるべきこと
-                    <div class="history-btn-container">
-                        <button class="btn-history-trigger" onclick="toggleHistoryPopup(event)">📜 済/未リスト</button>
-                        <div class="history-list-popup" id="historyListPopup" onclick="event.stopPropagation()">
-                            <div class="history-tabs">
-                                <div class="history-tab active" id="tabDoneBtn" onclick="switchHistoryTab('done')">完了済み</div>
-                                <div class="history-tab" id="tabYetBtn" onclick="switchHistoryTab('yet')">期限切れ未完了</div>
-                            </div>
-                            <div class="history-items-container" id="historyItemsContainer"></div>
-                        </div>
-                    </div>
+            
+            <div class="card section-company-list">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
+                    <h3 style="margin:0; color:#ff6b8b; font-size:1.0rem; text-align: left;">📊 登録企業一覧</h3>
+                    <input type="text" id="searchBox" placeholder="企業名で探す... 🔍" oninput="renderTable()" style="max-width:220px; padding:6px 12px; border-radius:20px; width:100%;">
                 </div>
-                <ul class="todo-list" id="todoList"></ul>
-                <div class="task-pagination" id="taskPagination">
-                    <button class="btn-pag" onclick="changeTaskPage(-1)">前へ</button>
-                    <span id="taskPageNum">1 / 1</span>
-                    <button class="btn-pag" onclick="changeTaskPage(1)">次へ</button>
+                
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 14%;">企業名</th>
+                                <th style="width: 16%;">マイページ / ID</th>
+                                <th style="width: 18%;">ES提出期限/状況</th>
+                                <th style="width: 13%;">次回日程</th>
+                                <th style="width: 11%;">ステータス</th>
+                                <th style="width: 19%;">メモ</th>
+                                <th style="width: 9%;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="companyTableBody"></tbody>
+                    </table>
                 </div>
+
+                <div id="mobileCompanyList" class="mobile-company-list-wrapper"></div>
             </div>
-        </div>
 
-        <div class="calendar-section">
-            <div class="calendar-nav">
-                <button class="btn-pag" onclick="changeMonth(-1)">◀ 前の月</button>
-                <h3 id="calendarTitle" style="color:var(--text-dark); font-size:1.1rem; cursor:pointer;" onclick="resetToTodayMonth()">2024年 00月</h3>
-                <button class="btn-pag" onclick="changeMonth(1)">次の月 ▶</button>
-            </div>
-            <div class="calendar-grid" id="calendarGrid"></div>
         </div>
-
-        <div class="desktop-table-container">
-            <table class="company-table">
-                <thead>
-                    <tr>
-                        <th style="width: 14%;">企業名</th>
-                        <th style="width: 15%;">マイページ情報</th>
-                        <th style="width: 13%;">ES締切</th>
-                        <th style="width: 7%; text-align:center;">ES済</th>
-                        <th style="width: 13%;">次回選考</th>
-                        <th style="width: 11%;">ステータス</th>
-                        <th style="width: 17%;">メモ</th>
-                        <th style="width: 10%;">操作</th>
-                    </tr>
-                </thead>
-                <tbody id="companyTableBody"></tbody>
-            </table>
-        </div>
-
-        <div class="mobile-cards-container" id="mobileCardsContainer"></div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <div id="loadingMask" class="loading-mask">処理中だよ...🧸</div>
 
     <script>
-        // --- Firebaseの設定 ---
+        // Firebase構成
         const firebaseConfig = {
-            apiKey: "AIzaSyA...",
-            authDomain: "your-app.firebaseapp.com",
-            databaseURL: "https://your-app-default-rtdb.firebaseio.com",
-            projectId: "your-app",
-            storageBucket: "your-app.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "1:123:web:abc"
+            apiKey: "AIzaSyBAA9XGrLAtZ5IUD0EIOhDe_bmCrM6blpo",
+            authDomain: "shukatsu-tool-e9973.firebaseapp.com",
+            projectId: "shukatsu-tool-e9973",
+            storageBucket: "shukatsu-tool-e9973.firebasestorage.app",
+            messagingSenderId: "193244258703",
+            appId: "1:193244258703:web:44b4237a3e88006c90ebfa"
         };
+        
         firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+        const auth = firebase.auth();
+        const db = firebase.firestore();
 
-        window.currentUid = "user_default_setting";
-        let companies = [];
-        let editingIndex = null;
+        window.companies = [];
+        window.userName = "ユーザー";
+        window.currentUid = null;
+        let editingIndex = null; 
         let currentCalendarDate = new Date();
+        let unsubscribeRealtime = null;
+
         let currentTaskPage = 1;
         const tasksPerPage = 5;
-        let currentHistoryTab = 'done';
-        let historyEditingKey = null;
 
-        function initTimeSelects() {
-            const hContainers = ['esHour', 'interviewHour'];
-            const mContainers = ['esMin', 'interviewMin'];
-            hContainers.forEach(id => {
-                const el = document.getElementById(id);
-                if(el){
-                    for(let i=0; i<24; i++) {
-                        let opt = document.createElement('option');
-                        opt.value = String(i).padStart(2, '0'); opt.textContent = String(i).padStart(2, '0');
-                        el.appendChild(opt);
-                    }
+        let mobileOpenedIndices = new Set();
+        let currentHistoryTab = 'done'; // 'done' or 'yet'
+        let historyEditingKey = null; // 済/未リスト内で編集中のキー追跡用
+
+        function initTimeSelectsForElement(hEl, mEl) {
+            if(hEl && hEl.options.length === 0) {
+                for(let i=0; i<24; i++) { let v = String(i).padStart(2, '0'); hEl.appendChild(new Option(v, v)); }
+            }
+            if(mEl && mEl.options.length === 0) {
+                for(let i=0; i<60; i+=5) { let v = String(i).padStart(2, '0'); mEl.appendChild(new Option(v, v)); }
+            }
+        }
+
+        (function initTimeSelects() {
+            initTimeSelectsForElement(document.getElementById('esHour'), document.getElementById('esMin'));
+            initTimeSelectsForElement(document.getElementById('interviewHour'), document.getElementById('interviewMin'));
+        })();
+
+        function updateGreetingMessage() {
+            const now = new Date();
+            const hour = now.getHours();
+            const min = now.getMinutes();
+            const timeVal = hour + (min / 60);
+            let msg = "";
+            if (timeVal >= 5.0 && timeVal <= 10.0) msg = "おはよん！<br>今日も１日がんばろう😽✨";
+            else if (timeVal > 10.0 && timeVal <= 17.0) msg = "やっほ〜！<br>今日はなにするの😳💡";
+            else if (timeVal > 17.0 && timeVal <= 23.999) msg = "今日も１日おつかれさま😌🥂";
+            else msg = "もう明日になったよ！<br>がんばりすぎないでね😴🌙";
+            
+            const el = document.getElementById('greetingMessage');
+            if(el) el.innerHTML = msg;
+        }
+        setInterval(updateGreetingMessage, 60000);
+
+        function changeAppTitle() {
+            const newName = prompt("あなたのお名前を入力してね！", window.userName);
+            if (newName !== null) {
+                window.userName = newName.trim() ? newName.trim() : "ユーザー";
+                document.getElementById('appTitleDisplay').textContent = `${window.userName}の就活`;
+                saveToFirebase(window.currentUid);
+            }
+        }
+
+        async function loginWithGoogle() {
+            showLoading(true, "ログイン中...");
+            const provider = new firebase.auth.GoogleAuthProvider();
+            try {
+                await auth.signInWithPopup(provider);
+                updateSyncStatus("同期中... ⏳", "#ffd43b");
+            } catch (error) {
+                alert("ログインに失敗しちゃった: " + error.message);
+                showLoading(false);
+            }
+        }
+
+        async function logout() {
+            if (!confirm("ログアウトする？データはクラウドに残るよ！")) return;
+            showLoading(true, "ログアウト中...");
+            try {
+                if (unsubscribeRealtime) { unsubscribeRealtime(); unsubscribeRealtime = null; }
+                await auth.signOut();
+            } catch (error) {
+                showLoading(false);
+            }
+        }
+
+        function startRealtimeSync(uid) {
+            if (unsubscribeRealtime) unsubscribeRealtime();
+            updateSyncStatus("同期中... ⏳", "#ffd43b");
+            
+            const docRef = db.collection("users").doc(uid);
+            unsubscribeRealtime = docRef.onSnapshot((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    window.companies = data.companies || [];
+                    window.userName = data.userName || "ユーザー";
+                } else {
+                    window.companies = [];
+                    window.userName = "ユーザー";
+                    docRef.set({ companies: [], userName: "ユーザー" }, { merge: true });
                 }
-            });
-            mContainers.forEach(id => {
-                const el = document.getElementById(id);
-                if(el){
-                    for(let i=0; i<60; i+=5) {
-                        let opt = document.createElement('option');
-                        opt.value = String(i).padStart(2, '0'); opt.textContent = String(i).padStart(2, '0');
-                        el.appendChild(opt);
-                    }
-                }
+                document.getElementById('appTitleDisplay').textContent = `${window.userName}の就活`;
+                renderApp();
+                updateSyncStatus("同期済み ✨", "#2b8a3e");
+                showLoading(false);
+            }, (error) => {
+                updateSyncStatus("同期エラー 😿", "#fa5252");
+                showLoading(false);
             });
         }
-        initTimeSelects();
 
-        function toggleTimeInputs(checkId, containerId) {
-            const chk = document.getElementById(checkId);
-            const box = document.getElementById(containerId);
-            if(chk && box) box.style.display = chk.checked ? "flex" : "none";
+        async function saveToFirebase(uid) {
+            if (!uid) { renderApp(); return; }
+            updateSyncStatus("保存中... ✨", "#ffd43b");
+            try {
+                await db.collection("users").doc(uid).set({
+                    companies: window.companies,
+                    userName: window.userName
+                }, { merge: true });
+            } catch (error) {
+                updateSyncStatus("保存エラー ❌", "#fa5252");
+            }
         }
 
-        function loadFromFirebase(uid) {
-            if(!uid) return;
-            database.ref('users/' + uid + '/companies').on('value', (snapshot) => {
-                const data = snapshot.val();
-                companies = data ? data : [];
-                renderAll();
-            });
-        }
-        loadFromFirebase(window.currentUid);
+        auth.onAuthStateChanged((user) => {
+            updateGreetingMessage();
+            const emailEl = document.getElementById('userEmailDisplay');
+            if (user) {
+                window.currentUid = user.uid;
+                if (emailEl) emailEl.textContent = user.displayName || user.email || "";
+                document.getElementById('btnGoogleLogin').style.display = 'none';
+                document.getElementById('btnGoogleLogout').style.display = 'inline-block';
+                startRealtimeSync(user.uid);
+            } else {
+                window.currentUid = null;
+                window.companies = [];
+                window.userName = "ユーザー";
+                if (emailEl) emailEl.textContent = "";
+                document.getElementById('btnGoogleLogin').style.display = 'inline-block';
+                document.getElementById('btnGoogleLogout').style.display = 'none';
+                document.getElementById('appTitleDisplay').textContent = `${window.userName}の就活`;
+                renderApp();
+                updateSyncStatus("未ログイン 📥", "#868e96");
+                showLoading(false);
+            }
+        });
 
-        function saveToFirebase(uid) {
-            if(!uid) return;
-            database.ref('users/' + uid + '/companies').set(companies);
+        function updateSyncStatus(text, color) {
+            const el = document.getElementById('syncStatus');
+            if (el) { el.textContent = text; el.style.borderColor = color; el.style.color = color; }
         }
 
-        function renderAll() {
-            renderDesktopTable();
-            renderMobileCards();
+        function showLoading(show, text = "") {
+            const mask = document.getElementById('loadingMask');
+            if (mask) { mask.style.display = show ? 'flex' : 'none'; if (text) mask.textContent = text; }
+        }
+
+        function renderApp() {
+            renderTable();
             renderTodoList();
             renderCalendar();
+            renderHistoryPopupContents();
         }
 
-        function getStatusBadgeClass(status) {
-            switch(status) {
-                case '未エントリー': case '説明会': case 'その他': return 'status-not-started';
-                case 'ES作成中': return 'status-es-writing';
-                case 'ES提出済み': return 'status-es-submitted';
-                case 'テスト': case 'GD': case '一次面接': case '二次面接': case '最終面接': return 'status-interview';
-                case 'インターン': return 'status-intern';
-                case '結果待ち': return 'status-waiting';
-                case '内定': return 'status-accepted';
-                case '不合格': return 'status-rejected';
-                default: return 'status-not-started';
+        function formatMypageUrlText(url) {
+            if(!url) return "";
+            if(url.length <= 15) return url;
+            return url.substring(0, 15) + "...";
+        }
+
+        function splitDeadlineString(str) {
+            if(!str) return { date: "-", time: "" };
+            const p = str.split(" ");
+            return { date: p[0].replace(/-/g, "/"), time: p[1] || "" };
+        }
+
+        function splitInterviewString(str) {
+            if(!str) return { date: "-", time: "" };
+            const p = str.split(" ");
+            return { date: p[0].replace(/-/g, "/"), time: p[1] || "" };
+        }
+
+        window.toggleMobileAccordion = function(idx) {
+            const cardEl = document.getElementById(`m-card-${idx}`);
+            if(!cardEl) return;
+            if(mobileOpenedIndices.has(idx)) {
+                mobileOpenedIndices.delete(idx);
+                cardEl.classList.remove('open');
+            } else {
+                mobileOpenedIndices.add(idx);
+                cardEl.classList.add('open');
             }
-        }
+        };
 
-        function renderDesktopTable() {
+        function renderTable() {
             const tbody = document.getElementById('companyTableBody');
-            if(!tbody) return;
+            const mList = document.getElementById('mobileCompanyList');
+            if (!tbody || !mList) return;
+            
             tbody.innerHTML = '';
+            mList.innerHTML = '';
 
-            companies.forEach((comp, idx) => {
+            const keyword = document.getElementById("searchBox")?.value.toLowerCase() || "";
+            
+            const indexedCompanies = companies.map((comp, idx) => ({ comp, idx }));
+            indexedCompanies.sort((a, b) => a.comp.name.localeCompare(b.comp.name, 'ja'));
+
+            const filteredCompanies = indexedCompanies.filter(({ comp }) => comp.name.toLowerCase().includes(keyword));
+
+            if (filteredCompanies.length === 0) {
+                const emptyHtml = `<tr><td colspan="7" style="text-align:center; color:#868e96; padding:20px;">企業がまだ登録されていないよ🔍</td></tr>`;
+                tbody.innerHTML = emptyHtml;
+                mList.innerHTML = `<div style="text-align:center; color:#868e96; padding:20px; font-size:0.85rem;">企業がまだ登録されていないよ🔍</div>`;
+                return;
+            }
+
+            filteredCompanies.forEach(({ comp, idx }) => {
+                
+                // パソコン用テーブル行
+                const tr = document.createElement('tr');
+                tr.className = 'status-row-white';
+
                 if (editingIndex === idx) {
-                    const esParsed = parseDateTimeString(comp.esDeadline);
-                    const intParsed = parseDateTimeString(comp.interviewDate);
+                    const esObj = parseDateTimeString(comp.esDeadline);
+                    const intObj = parseDateTimeString(comp.interviewDate);
+                    
+                    let hOpts = "", mOpts = "";
+                    for(let i=0; i<24; i++) { let v = String(i).padStart(2, '0'); hOpts += `<option value="${v}">${v}</option>`; }
+                    for(let i=0; i<60; i+=5) { let v = String(i).padStart(2, '0'); mOpts += `<option value="${v}">${v}</option>`; }
 
-                    const tr = document.createElement('tr');
-                    tr.className = 'inline-edit-row';
                     tr.innerHTML = `
-                        <td><input type="text" id="inline_name_${idx}" class="inline-input" value="${escapeHtml(comp.name)}"></td>
+                        <td><input type="text" id="inline_name_${idx}" class="table-edit-box" value="${escapeHtml(comp.name)}" required></td>
                         <td>
-                            <input type="url" id="inline_mypageUrl_${idx}" class="inline-input" style="margin-bottom:4px;" placeholder="URL" value="${escapeHtml(comp.mypageUrl)}">
-                            <input type="text" id="inline_mypageId_${idx}" class="inline-input" placeholder="ID" value="${escapeHtml(comp.mypageId)}">
-                        </td>
-                        <td>
-                            <input type="date" id="inline_esDate_${idx}" class="inline-input" value="${esParsed.date}">
-                            <div style="font-size:0.7rem; margin-top:2px; color:#718096;">
-                                <input type="checkbox" id="inline_esHasTime_${idx}" ${esParsed.hasTime?'checked':''} onchange="toggleTimeInputs('inline_esHasTime_${idx}', 'inline_esTimeBox_${idx}')"> 時間有
-                            </div>
-                            <div id="inline_esTimeBox_${idx}" style="display:${esParsed.hasTime?'flex':'none'}; gap:2px; margin-top:2px; align-items:center;">
-                                <select id="inline_esHour_${idx}" class="inline-input" style="padding:2px;"></select>:
-                                <select id="inline_esMin_${idx}" class="inline-input" style="padding:2px;"></select>
+                            <div style="display:flex; flex-direction:column; gap:4px;">
+                                <input type="url" id="inline_mypageUrl_${idx}" class="table-edit-box" value="${escapeHtml(comp.mypageUrl || '')}" placeholder="URL">
+                                <input type="text" id="inline_mypageId_${idx}" class="table-edit-box" value="${escapeHtml(comp.mypageId || '')}" placeholder="ID">
                             </div>
                         </td>
-                        <td style="text-align:center;"><input type="checkbox" id="inline_esDone_${idx}" ${comp.esDone?'checked':''}></td>
                         <td>
-                            <select id="inline_nextDateType_${idx}" class="inline-input" style="margin-bottom:4px;">
+                            <div style="display:flex; flex-direction:column; gap:4px;">
+                                <label style="margin:0; display:flex; align-items:center; gap:4px; font-size:0.75rem;"><input type="checkbox" id="inline_esDone_${idx}" ${comp.esDone ? 'checked' : ''} style="width:auto;">提出済</label>
+                                <input type="date" id="inline_esDate_${idx}" class="table-edit-box" value="${esObj.date}">
+                                <label style="font-weight:normal; font-size:0.7rem; display:flex; align-items:center; gap:4px;"><input type="checkbox" id="inline_esHasTime_${idx}" ${esObj.hasTime?'checked':''} onchange="document.getElementById('inline_esTimeBox_${idx}').style.display=this.checked?'flex':'none'" style="width:auto;">時間指定</label>
+                                <div id="inline_esTimeBox_${idx}" class="time-box-flex" style="display:${esObj.hasTime?'flex':'none'};">
+                                    <select id="inline_esHour_${idx}" class="table-edit-box">${hOpts}</select>:<select id="inline_esMin_${idx}" class="table-edit-box">${mOpts}</select>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <select id="inline_nextDateType_${idx}" class="table-edit-box" style="margin-bottom:2px;">
+                                <option value="" ${comp.nextDateType===''?'selected':''}>(なし)</option>
                                 <option value="説明会" ${comp.nextDateType==='説明会'?'selected':''}>説明会</option>
-                                <option value="テスト" ${comp.nextDateType==='テスト'?'selected':''}>テスト</option>
                                 <option value="GD" ${comp.nextDateType==='GD'?'selected':''}>GD</option>
+                                <option value="テスト" ${comp.nextDateType==='テスト'?'selected':''}>テスト</option>
                                 <option value="一次面接" ${comp.nextDateType==='一次面接'?'selected':''}>一次面接</option>
                                 <option value="二次面接" ${comp.nextDateType==='二次面接'?'selected':''}>二次面接</option>
                                 <option value="最終面接" ${comp.nextDateType==='最終面接'?'selected':''}>最終面接</option>
                                 <option value="インターン" ${comp.nextDateType==='インターン'?'selected':''}>インターン</option>
                                 <option value="その他" ${comp.nextDateType==='その他'?'selected':''}>その他</option>
                             </select>
-                            <input type="date" id="inline_intDate_${idx}" class="inline-input" value="${intParsed.date}">
-                            <div style="font-size:0.7rem; margin-top:2px; color:#718096;">
-                                <input type="checkbox" id="inline_intHasTime_${idx}" ${intParsed.hasTime?'checked':''} onchange="toggleTimeInputs('inline_intHasTime_${idx}', 'inline_intTimeBox_${idx}')"> 時間有
-                            </div>
-                            <div id="inline_intTimeBox_${idx}" style="display:${intParsed.hasTime?'flex':'none'}; gap:2px; margin-top:2px; align-items:center;">
-                                <select id="inline_intHour_${idx}" class="inline-input" style="padding:2px;"></select>:
-                                <select id="inline_intMin_${idx}" class="inline-input" style="padding:2px;"></select>
+                            <input type="date" id="inline_intDate_${idx}" class="table-edit-box" value="${intObj.date}">
+                            <label style="font-weight:normal; font-size:0.7rem; display:flex; align-items:center; gap:4px; margin-top:2px;"><input type="checkbox" id="inline_intHasTime_${idx}" ${intObj.hasTime?'checked':''} onchange="document.getElementById('inline_intTimeBox_${idx}').style.display=this.checked?'flex':'none'" style="width:auto;">時間指定</label>
+                            <div id="inline_intTimeBox_${idx}" class="time-box-flex" style="display:${intObj.hasTime?'flex':'none'};">
+                                <select id="inline_intHour_${idx}" class="table-edit-box">${hOpts}</select>:<select id="inline_intMin_${idx}" class="table-edit-box">${mOpts}</select>
                             </div>
                         </td>
                         <td>
-                            <select id="inline_status_${idx}" class="inline-input">
+                            <select id="inline_status_${idx}" class="table-edit-box">
                                 <option value="未エントリー" ${comp.status==='未エントリー'?'selected':''}>未エントリー</option>
                                 <option value="説明会" ${comp.status==='説明会'?'selected':''}>説明会</option>
                                 <option value="ES作成中" ${comp.status==='ES作成中'?'selected':''}>ES作成中</option>
@@ -425,173 +727,240 @@
                                 <option value="その他" ${comp.status==='その他'?'selected':''}>その他</option>
                             </select>
                         </td>
-                        <td><textarea id="inline_memo_${idx}" class="inline-input" rows="2">${escapeHtml(comp.memo)}</textarea></td>
                         <td>
-                            <div class="btn-action-group">
-                                <button class="btn-sm btn-save" onclick="saveInlineEdit(${idx})">保存</button>
-                                <button class="btn-sm btn-edit" onclick="cancelInlineEdit()">戻す</button>
+                            <textarea id="inline_memo_${idx}" class="table-edit-box" rows="2" style="height:44px; resize:none;" placeholder="メモ">${escapeHtml(comp.memo || '')}</textarea>
+                        </td>
+                        <td>
+                            <div style="display:flex; flex-direction:column; gap:4px;">
+                                <button class="action-btn" style="background:var(--primary-pink); color:white; border:none;" onclick="saveInlineEdit(${idx})">保存</button>
+                                <button class="action-btn" onclick="cancelInlineEdit()">戻る</button>
                             </div>
                         </td>
                     `;
-                    tbody.appendChild(tr);
-
-                    populateInlineTimeSelects(`inline_esHour_${idx}`, `inline_esMin_${idx}`, esParsed);
-                    populateInlineTimeSelects(`inline_intHour_${idx}`, `inline_intMin_${idx}`, intParsed);
+                    setTimeout(() => {
+                        if(esObj.hasTime){ 
+                            const eh = document.getElementById(`inline_esHour_${idx}`);
+                            const em = document.getElementById(`inline_esMin_${idx}`);
+                            if(eh) eh.value = esObj.hour; if(em) em.value = esObj.min;
+                        }
+                        if(intObj.hasTime){ 
+                            const ih = document.getElementById(`inline_intHour_${idx}`);
+                            const im = document.getElementById(`inline_intMin_${idx}`);
+                            if(ih) ih.value = intObj.hour; if(im) im.value = intObj.min;
+                        }
+                    }, 0);
                 } else {
-                    const tr = document.createElement('tr');
-                    const nameDisp = comp.hp ? `<a href="${comp.hp}" target="_blank" style="color:var(--dark-pink); font-weight:bold; text-decoration:none;">${escapeHtml(comp.name)} 🔗</a>` : `<strong>${escapeHtml(comp.name)}</strong>`;
-                    
-                    let mypageDisp = "";
+                    let mypageHtml = '<span style="color:#ccc;">-</span>';
                     if (comp.mypageUrl || comp.mypageId) {
-                        const urlLink = comp.mypageUrl ? `<a href="${comp.mypageUrl}" target="_blank" style="text-decoration:none;">🔑 ログイン 🔗</a>` : '🔑 マイページ';
-                        const idText = comp.mypageId ? `<br><span style="font-size:0.75rem; color:#718096;">ID: ${escapeHtml(comp.mypageId)}</span>` : '';
-                        mypageDisp = urlLink + idText;
-                    } else { mypageDisp = "-"; }
+                        const linkPart = comp.mypageUrl ? `<a href="${comp.mypageUrl}" target="_blank">${escapeHtml(formatMypageUrlText(comp.mypageUrl))}</a>` : '<span style="color:#868e96;">-</span>';
+                        const idPart = comp.mypageId ? `<span class="mypage-id-label">ID: ${escapeHtml(comp.mypageId)}</span>` : '<span class="mypage-id-label">ID: -</span>';
+                        mypageHtml = `<div class="mypage-inline-info"><div>${linkPart}</div><div>${idPart}</div></div>`;
+                    }
 
-                    const nextDisp = comp.interviewDate ? `<span style="font-size:0.75rem; background:#fff3bf; padding:2px 6px; border-radius:4px; font-weight:bold; color:#d9480f; display:inline-block; margin-bottom:2px;">${escapeHtml(comp.nextDateType || '選考')}</span><br><span style="font-size:0.85rem;">${comp.interviewDate}</span>` : "-";
+                    let esDeadlineHtml = "-";
+                    if (comp.esDeadline) {
+                        const esData = splitDeadlineString(comp.esDeadline);
+                        const fullEsTimeText = esData.time ? `${esData.date} ${esData.time}` : esData.date;
+                        const isEsDoneText = comp.esDone ? "提出済" : "未提出";
+                        
+                        esDeadlineHtml = `
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <label style="display:inline-flex; align-items:center; cursor:pointer; margin:0;">
+                                    <input type="checkbox" ${comp.esDone ? 'checked' : ''} onchange="toggleEsDone(${idx}, this.checked)" style="width:auto; margin:0;">
+                                </label>
+                                <div class="two-line-cell" style="text-align:left; line-height:1.2;">
+                                    <span style="font-size:0.85rem; font-weight:bold; color:#000;">${fullEsTimeText}</span>
+                                    <span class="small-sub-text" style="font-weight:bold; color:#5c4d50;">${isEsDoneText}</span>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    let nextScheduleHtml = "-";
+                    if(comp.interviewDate) {
+                        const intData = splitInterviewString(comp.interviewDate);
+                        const fullTimeText = intData.time ? `${intData.date} ${intData.time}` : intData.date;
+                        if(comp.nextDateType) {
+                            nextScheduleHtml = `
+                                <div class="two-line-cell">
+                                    <span style="font-weight:bold;">${escapeHtml(comp.nextDateType)}</span>
+                                    <span class="small-sub-text">${fullTimeText}</span>
+                                </div>
+                            `;
+                        } else {
+                            nextScheduleHtml = `<span>${fullTimeText}</span>`;
+                        }
+                    }
 
                     tr.innerHTML = `
-                        <td>${nameDisp}</td>
-                        <td>${mypageDisp}</td>
-                        <td style="font-size:0.85rem;">${comp.esDeadline || "-"}</td>
-                        <td style="text-align:center;"><input type="checkbox" ${comp.esDone?'checked':''} onchange="toggleEsDone(${idx}, this.checked)"></td>
-                        <td>${nextDisp}</td>
-                        <td><span class="badge-status ${getStatusBadgeClass(comp.status)}">${comp.status}</span></td>
-                        <td style="font-size:0.8rem; white-space:pre-wrap; max-width:200px; word-break:break-all;">${escapeHtml(comp.memo) || "-"}</td>
+                        <td style="font-weight: bold;">
+                            ${comp.hp ? `<a href="${comp.hp}" target="_blank" class="comp-name-black has-link">${escapeHtml(comp.name)}</a>` : `<span class="comp-name-black">${escapeHtml(comp.name)}</span>`}
+                        </td>
                         <td>
-                            <div class="btn-action-group">
-                                <button class="btn-sm btn-edit" onclick="startInlineEdit(${idx})">編集</button>
-                                <button class="btn-sm btn-delete" onclick="deleteCompany(${idx})">削除</button>
+                            ${mypageHtml}
+                        </td>
+                        <td>
+                            ${esDeadlineHtml}
+                        </td>
+                        <td>
+                            ${nextScheduleHtml}
+                        </td>
+                        <td>
+                            <span style="font-weight:bold;">${escapeHtml(comp.status)}</span>
+                        </td>
+                        <td>
+                            ${comp.memo ? `<div class="memo-limited-box" title="${escapeHtml(comp.memo)}">${escapeHtml(comp.memo)}</div>` : '-'}
+                        </td>
+                        <td>
+                            <div style="display:flex; gap:4px;">
+                                <button class="action-btn" onclick="startInlineEdit(${idx})">編集</button>
+                                <button class="action-btn" style="color:#fa5252;" onclick="deleteCompany(${idx})">削除</button>
                             </div>
                         </td>
                     `;
-                    tbody.appendChild(tr);
                 }
-            });
-        }
+                tbody.appendChild(tr);
 
-        function populateInlineTimeSelects(hId, mId, parsedData) {
-            const hSel = document.getElementById(hId);
-            const mSel = document.getElementById(mId);
-            for(let i=0; i<24; i++) {
-                let val = String(i).padStart(2, '0'); let opt = document.createElement('option');
-                opt.value = val; opt.textContent = val; if(val === parsedData.hour) opt.selected = true;
-                hSel.appendChild(opt);
-            }
-            for(let i=0; i<60; i+=5) {
-                let val = String(i).padStart(2, '0'); let opt = document.createElement('option');
-                opt.value = val; opt.textContent = val; if(val === parsedData.min) opt.selected = true;
-                mSel.appendChild(opt);
-            }
-        }
 
-        function renderMobileCards() {
-            const container = document.getElementById('mobileCardsContainer');
-            if(!container) return;
-            container.innerHTML = '';
+                // スマホ用アコーディオンカード型
+                const mCard = document.createElement('div');
+                mCard.id = `m-card-${idx}`;
+                mCard.className = 'm-comp-card';
+                if(mobileOpenedIndices.has(idx) || editingIndex === idx) mCard.classList.add('open');
 
-            companies.forEach((comp, idx) => {
-                if(editingIndex === idx) {
-                    const esParsed = parseDateTimeString(comp.esDeadline);
-                    const intParsed = parseDateTimeString(comp.interviewDate);
-
-                    const div = document.createElement('div');
-                    div.className = 'mobile-comp-card';
-                    div.style.borderColor = 'var(--main-pink)';
-                    div.innerHTML = `
-                        <div class="form-group"><label>企業名</label><input type="text" id="mob_name_${idx}" class="inline-input" value="${escapeHtml(comp.name)}"></div>
-                        <div class="form-group"><label>マイページURL</label><input type="url" id="mob_mypageUrl_${idx}" class="inline-input" value="${escapeHtml(comp.mypageUrl)}"></div>
-                        <div class="form-group"><label>マイページID</label><input type="text" id="mob_mypageId_${idx}" class="inline-input" value="${escapeHtml(comp.mypageId)}"></div>
-                        <div class="form-group">
-                            <label>ES期限</label><input type="date" id="mob_esDate_${idx}" class="inline-input" value="${esParsed.date}">
-                            <div style="font-size:0.75rem; margin-top:4px;"><input type="checkbox" id="mob_esHasTime_${idx}" ${esParsed.hasTime?'checked':''} onchange="toggleTimeInputs('mob_esHasTime_${idx}', 'mob_esTimeBox_${idx}')"> 時間有</div>
-                            <div id="mob_esTimeBox_${idx}" style="display:${esParsed.hasTime?'flex':'none'}; gap:4px; margin-top:4px; align-items:center;">
-                                <select id="mob_esHour_${idx}" class="inline-input"></select>時 <select id="mob_esMin_${idx}" class="inline-input"></select>分
-                            </div>
-                        </div>
-                        <div class="form-group"><input type="checkbox" id="mob_esDone_${idx}" ${comp.esDone?'checked':''}> <label style="display:inline;" for="mob_esDone_${idx}">ES提出済み</label></div>
-                        <div class="form-group">
-                            <label>次回選考種類</label>
-                            <select id="mob_nextDateType_${idx}" class="inline-input">
-                                <option value="説明会" ${comp.nextDateType==='説明会'?'selected':''}>説明会</option>
-                                <option value="テスト" ${comp.nextDateType==='テスト'?'selected':''}>テスト</option>
-                                <option value="GD" ${comp.nextDateType==='GD'?'selected':''}>GD</option>
-                                <option value="一次面接" ${comp.nextDateType==='一次面接'?'selected':''}>一次面接</option>
-                                <option value="二次面接" ${comp.nextDateType==='二次面接'?'selected':''}>二次面接</option>
-                                <option value="最終面接" ${comp.nextDateType==='最終面接'?'selected':''}>最終面接</option>
-                                <option value="インターン" ${comp.nextDateType==='インターン'?'selected':''}>インターン</option>
-                                <option value="その他" ${comp.nextDateType==='その他'?'selected':''}>その他</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>次回選考日時</label><input type="date" id="mob_intDate_${idx}" class="inline-input" value="${intParsed.date}">
-                            <div style="font-size:0.75rem; margin-top:4px;"><input type="checkbox" id="mob_intHasTime_${idx}" ${intParsed.hasTime?'checked':''} onchange="toggleTimeInputs('mob_intHasTime_${idx}', 'mob_intTimeBox_${idx}')"> 時間有</div>
-                            <div id="mob_intTimeBox_${idx}" style="display:${intParsed.hasTime?'flex':'none'}; gap:4px; margin-top:4px; align-items:center;">
-                                <select id="mob_intHour_${idx}" class="inline-input"></select>時 <select id="mob_intMin_${idx}" class="inline-input"></select>分
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label>ステータス</label>
-                            <select id="mob_status_${idx}" class="inline-input">
-                                <option value="未エントリー" ${comp.status==='未エントリー'?'selected':''}>未エントリー</option>
-                                <option value="説明会" ${comp.status==='説明会'?'selected':''}>説明会</option>
-                                <option value="ES作成中" ${comp.status==='ES作成中'?'selected':''}>ES作成中</option>
-                                <option value="ES提出済み" ${comp.status==='ES提出済み'?'selected':''}>ES提出済み</option>
-                                <option value="テスト" ${comp.status==='テスト'?'selected':''}>テスト</option>
-                                <option value="GD" ${comp.status==='GD'?'selected':''}>GD</option>
-                                <option value="一次面接" ${comp.status==='一次面接'?'selected':''}>一次面接</option>
-                                <option value="二次面接" ${comp.status==='二次面接'?'selected':''}>二次面接</option>
-                                <option value="最終面接" ${comp.status==='最終面接'?'selected':''}>最終面接</option>
-                                <option value="インターン" ${comp.status==='インターン'?'selected':''}>インターン</option>
-                                <option value="結果待ち" ${comp.status==='結果待ち'?'selected':''}>結果待ち</option>
-                                <option value="内定" ${comp.status==='内定'?'selected':''}>内定</option>
-                                <option value="不合格" ${comp.status==='不合格'?'selected':''}>不合格</option>
-                                <option value="その他" ${comp.status==='その他'?'selected':''}>その他</option>
-                            </select>
-                        </div>
-                        <div class="form-group"><label>メモ</label><textarea id="mob_memo_${idx}" class="inline-input" rows="2">${escapeHtml(comp.memo)}</textarea></div>
-                        <div class="btn-action-group" style="margin-top:10px;">
-                            <button class="btn-sm btn-save" style="flex:1; padding:8px;" onclick="saveMobileEdit(${idx})">保存</button>
-                            <button class="btn-sm btn-edit" style="flex:1; padding:8px;" onclick="cancelInlineEdit()">キャンセル</button>
-                        </div>
-                    `;
-                    container.appendChild(div);
-                    populateInlineTimeSelects(`mob_esHour_${idx}`, `mob_esMin_${idx}`, esParsed);
-                    populateInlineTimeSelects(`mob_intHour_${idx}`, `mob_intMin_${idx}`, intParsed);
-                } else {
-                    const div = document.createElement('div');
-                    div.className = 'mobile-comp-card';
+                if (editingIndex === idx) {
+                    const esObj = parseDateTimeString(comp.esDeadline);
+                    const intObj = parseDateTimeString(comp.interviewDate);
                     
-                    const titleDisp = comp.hp ? `<a href="${comp.hp}" target="_blank" style="color:var(--dark-pink); font-weight:bold; text-decoration:none; font-size:1.05rem;">${escapeHtml(comp.name)} 🔗</a>` : `<strong style="font-size:1.05rem;">${escapeHtml(comp.name)}</strong>`;
-                    const loginDisp = comp.mypageUrl ? `<a href="${comp.mypageUrl}" target="_blank" style="text-decoration:none; margin-left:10px; font-size:0.8rem;">🔑 ログイン 🔗</a>` : '';
+                    let hOpts = "", mOpts = "";
+                    for(let i=0; i<24; i++) { let v = String(i).padStart(2, '0'); hOpts += `<option value="${v}">${v}</option>`; }
+                    for(let i=0; i<60; i+=5) { let v = String(i).padStart(2, '0'); mOpts += `<option value="${v}">${v}</option>`; }
 
-                    div.innerHTML = `
-                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; border-bottom:1px dashed var(--border-color); padding-bottom:6px;">
-                            <div>${titleDisp}${loginDisp}</div>
-                            <span class="badge-status ${getStatusBadgeClass(comp.status)}">${comp.status}</span>
+                    mCard.innerHTML = `
+                        <div class="m-comp-header" style="background:#fff0f2;">
+                            <span>📝 ${escapeHtml(comp.name)} を編集中</span>
                         </div>
-                        ${comp.mypageId ? `<div class="mob-row"><span class="mob-label">ログインID</span><span class="mob-val">${escapeHtml(comp.mypageId)}</span></div>`:''}
-                        <div class="mob-row"><span class="mob-label">ES提出期限</span><span class="mob-val">${comp.esDeadline || "-"}</span></div>
-                        <div class="mob-row"><span class="mob-label">ES提出状況</span><span class="mob-val"><input type="checkbox" ${comp.esDone?'checked':''} onchange="toggleEsDone(${idx}, this.checked)"> 提出した！</span></div>
-                        ${comp.interviewDate ? `<div class="mob-row"><span class="mob-label">${escapeHtml(comp.nextDateType || '次回選考')}</span><span class="mob-val" style="color:#d9480f; font-weight:bold;">${comp.interviewDate}</span></div>`:''}
-                        ${comp.memo ? `<div class="mob-row" style="flex-direction:column;"><span class="mob-label" style="width:100%;">メモ</span><span class="mob-val" style="background:#f8fafc; padding:6px; border-radius:6px; margin-top:2px; white-space:pre-wrap;">${escapeHtml(comp.memo)}</span></div>`:''}
-                        <div class="btn-action-group" style="margin-top:12px; justify-content:flex-end;">
-                            <button class="btn-sm btn-edit" onclick="startMobileEdit(${idx})">編集する</button>
-                            <button class="btn-sm btn-delete" onclick="deleteCompany(${idx})">削除</button>
+                        <div class="m-comp-body" style="display:block; background:#fff;">
+                            <div class="m-detail-row"><label>企業名 *</label><input type="text" id="mob_name_${idx}" value="${escapeHtml(comp.name)}"></div>
+                            <div class="m-detail-row"><label>マイページURL</label><input type="url" id="mob_mypageUrl_${idx}" value="${escapeHtml(comp.mypageUrl || '')}" placeholder="https://..."></div>
+                            <div class="m-detail-row"><label>マイページID</label><input type="text" id="mob_mypageId_${idx}" value="${escapeHtml(comp.mypageId || '')}"></div>
+                            
+                            <div class="m-detail-row" style="background:#fff5f6; padding:8px; border-radius:8px; border:1px solid var(--border-soft);">
+                                <label style="color:#ff6b8b; font-weight:bold;">ES締切設定</label>
+                                <label style="font-weight:normal; margin:4px 0;"><input type="checkbox" id="mob_esDone_${idx}" ${comp.esDone?'checked':''} style="width:auto;"> すでに提出済み</label>
+                                <input type="date" id="mob_esDate_${idx}" value="${esObj.date}">
+                                <label style="font-weight:normal; margin-top:4px;"><input type="checkbox" id="mob_esHasTime_${idx}" ${esObj.hasTime?'checked':''} onchange="document.getElementById('mob_esTimeBox_${idx}').style.display=this.checked?'flex':'none'" style="width:auto;"> 時間を指定する</label>
+                                <div id="mob_esTimeBox_${idx}" class="time-box-flex" style="display:${esObj.hasTime?'flex':'none'};">
+                                    <select id="mob_esHour_${idx}">${hOpts}</select>:<select id="mob_esMin_${idx}">${mOpts}</select>
+                                </div>
+                            </div>
+
+                            <div class="m-detail-row" style="background:#fffbf2; padding:8px; border-radius:8px; border:1px solid #ffe3af; margin-top:6px;">
+                                <label style="color:#ff6b8b; font-weight:bold;">次回選考/日時</label>
+                                <select id="mob_nextDateType_${idx}" style="margin-bottom:4px;">
+                                    <option value="" ${comp.nextDateType===''?'selected':''}>(なし)</option>
+                                    <option value="説明会" ${comp.nextDateType==='説明会'?'selected':''}>説明会</option>
+                                    <option value="GD" ${comp.nextDateType==='GD'?'selected':''}>GD</option>
+                                    <option value="テスト" ${comp.nextDateType==='テスト'?'selected':''}>テスト</option>
+                                    <option value="一次面接" ${comp.nextDateType==='一次面接'?'selected':''}>一次面接</option>
+                                    <option value="二次面接" ${comp.nextDateType==='二次面接'?'selected':''}>二次面接</option>
+                                    <option value="最終面接" ${comp.nextDateType==='最終面接'?'selected':''}>最終面接</option>
+                                    <option value="インターン" ${comp.nextDateType==='インターン'?'selected':''}>インターン</option>
+                                    <option value="その他" ${comp.nextDateType==='その他'?'selected':''}>その他</option>
+                                </select>
+                                <input type="date" id="mob_intDate_${idx}" value="${intObj.date}">
+                                <label style="font-weight:normal; margin-top:4px;"><input type="checkbox" id="mob_intHasTime_${idx}" ${intObj.hasTime?'checked':''} onchange="document.getElementById('mob_intTimeBox_${idx}').style.display=this.checked?'flex':'none'" style="width:auto;"> 時間を指定する</label>
+                                <div id="mob_intTimeBox_${idx}" class="time-box-flex" style="display:${intObj.hasTime?'flex':'none'};">
+                                    <select id="mob_intHour_${idx}">${hOpts}</select>:<select id="mob_intMin_${idx}">${mOpts}</select>
+                                </div>
+                            </div>
+
+                            <div class="m-detail-row" style="margin-top:6px;">
+                                <label>ステータス</label>
+                                <select id="mob_status_${idx}">
+                                    <option value="未エントリー" ${comp.status==='未エントリー'?'selected':''}>未エントリー</option>
+                                    <option value="説明会" ${comp.status==='説明会'?'selected':''}>説明会</option>
+                                    <option value="ES作成中" ${comp.status==='ES作成中'?'selected':''}>ES作成中</option>
+                                    <option value="ES提出済み" ${comp.status==='ES提出済み'?'selected':''}>ES提出済み</option>
+                                    <option value="テスト" ${comp.status==='テスト'?'selected':''}>テスト</option>
+                                    <option value="GD" ${comp.status==='GD'?'selected':''}>GD</option>
+                                    <option value="一次面接" ${comp.status==='一次面接'?'selected':''}>一次面接</option>
+                                    <option value="二次面接" ${comp.status==='二次面接'?'selected':''}>二次面接</option>
+                                    <option value="最終面接" ${comp.status==='最終面接'?'selected':''}>最終面接</option>
+                                    <option value="インターン" ${comp.status==='インターン'?'selected':''}>インターン</option>
+                                    <option value="結果待ち" ${comp.status==='結果待ち'?'selected':''}>結果待ち</option>
+                                    <option value="内定" ${comp.status==='内定'?'selected':''}>内定</option>
+                                    <option value="不合格" ${comp.status==='不合格'?'selected':''}>不合格</option>
+                                    <option value="その他" ${comp.status==='その他'?'selected':''}>その他</option>
+                                </select>
+                            </div>
+
+                            <div class="m-detail-row">
+                                <label>メモ</label>
+                                <textarea id="mob_memo_${idx}" rows="2" style="height:50px;" placeholder="メモ内容">${escapeHtml(comp.memo || '')}</textarea>
+                            </div>
+
+                            <div style="display:flex; gap:8px; margin-top:12px;">
+                                <button class="btn-cute" style="flex:1; padding:8px; border-radius:10px;" onclick="saveMobileEdit(${idx})">変更を保存 ✨</button>
+                                <button class="action-btn" style="flex:1; border-radius:10px;" onclick="cancelInlineEdit()">戻る</button>
+                            </div>
                         </div>
                     `;
-                    container.appendChild(div);
+                    setTimeout(() => {
+                        if(esObj.hasTime){
+                            const eh = document.getElementById(`mob_esHour_${idx}`);
+                            const em = document.getElementById(`mob_esMin_${idx}`);
+                            if(eh) eh.value = esObj.hour; if(em) em.value = esObj.min;
+                        }
+                        if(intObj.hasTime){
+                            const ih = document.getElementById(`mob_intHour_${idx}`);
+                            const im = document.getElementById(`mob_intMin_${idx}`);
+                            if(ih) ih.value = intObj.hour; if(im) im.value = intObj.min;
+                        }
+                    }, 0);
+
+                } else {
+                    let esText = "-";
+                    if(comp.esDeadline) {
+                        const esData = splitDeadlineString(comp.esDeadline);
+                        esText = `${esData.date} ${esData.time} (${comp.esDone ? '提出済' : '未提出'})`;
+                    }
+                    let nextText = "-";
+                    if(comp.interviewDate) {
+                        const intData = splitInterviewString(comp.interviewDate);
+                        nextText = comp.nextDateType ? `【${comp.nextDateType}】${intData.date} ${intData.time}` : `${intData.date} ${intData.time}`;
+                    }
+
+                    mCard.innerHTML = `
+                        <div class="m-comp-header" onclick="toggleMobileAccordion(${idx})">
+                            <span>${escapeHtml(comp.name)}</span>
+                            <span class="m-comp-arrow">▼</span>
+                        </div>
+                        <div class="m-comp-body">
+                            ${comp.hp ? `<div class="m-detail-row"><span class="m-detail-label">公式HP</span><span class="m-detail-value"><a href="${comp.hp}" target="_blank">HPを開く</a></span></div>` : ''}
+                            <div class="m-detail-row"><span class="m-detail-label">マイページ / ID</span><span class="m-detail-value">${comp.mypageUrl ? `<a href="${comp.mypageUrl}" target="_blank">ログイン</a>` : '-'}${comp.mypageId ? ` <br><span style="font-size:0.75rem; color:#666;">ID: ${escapeHtml(comp.mypageId)}</span>` : ''}</span></div>
+                            <div class="m-detail-row"><span class="m-detail-label">ES提出期限</span><span class="m-detail-value" style="font-weight:bold;">${esText}</span></div>
+                            <div class="m-detail-row"><span class="m-detail-label">次回選考日程</span><span class="m-detail-value" style="font-weight:bold; color:#ff6b8b;">${nextText}</span></div>
+                            <div class="m-detail-row"><span class="m-detail-label">選考ステータス</span><span class="m-detail-value" style="font-weight:bold;">${escapeHtml(comp.status)}</span></div>
+                            <div class="m-detail-row"><span class="m-detail-label">メモ</span><span class="m-detail-value" style="white-space:pre-wrap; background:#fff; padding:4px; border-radius:6px; display:block; border:1px solid #f1f3f5;">${comp.memo ? escapeHtml(comp.memo) : '-'}</span></div>
+                            
+                            <div style="display:flex; gap:8px; margin-top:10px; justify-content:flex-end;">
+                                <button class="action-btn" onclick="startInlineEdit(${idx})">編集</button>
+                                <button class="action-btn" style="color:#fa5252;" onclick="deleteCompany(${idx})">削除</button>
+                            </div>
+                        </div>
+                    `;
                 }
+                mList.appendChild(mCard);
             });
         }
 
-        window.startInlineEdit = function(index) { editingIndex = index; renderDesktopTable(); };
-        window.startMobileEdit = function(index) { editingIndex = index; renderMobileCards(); };
-        window.cancelInlineEdit = function() { editingIndex = null; renderDesktopTable(); renderMobileCards(); };
+        function startInlineEdit(index) { editingIndex = index; renderTable(); }
+        function cancelInlineEdit() { editingIndex = null; renderTable(); }
 
         window.saveInlineEdit = function(index) {
             const newName = document.getElementById(`inline_name_${index}`).value.trim();
-            if (!newName) { alert("企業名は空にできないよ！"); return; }
+            if (!newName) { alert("企業名は入れてね！"); return; }
             const isEsDone = document.getElementById(`inline_esDone_${index}`).checked;
             let statusVal = document.getElementById(`inline_status_${index}`).value;
             
@@ -604,8 +973,6 @@
                 const hasTime = document.getElementById(`inline_esHasTime_${index}`).checked;
                 finalEsStr = hasTime ? `${esDateVal} ${document.getElementById(`inline_esHour_${index}`).value}:${document.getElementById(`inline_esMin_${index}`).value}` : esDateVal;
             }
-
-            // --- ここから【終盤】コードの指定箇所修正を含む結合 ---
             const intDateVal = document.getElementById(`inline_intDate_${index}`).value;
             let finalIntStr = "";
             if(intDateVal){
@@ -757,8 +1124,7 @@
             });
 
             if (totalTasks === 0) {
-                // 修正点2: スマホの縦位置表示を綺麗に合わせるために<br>の位置を微調整
-                todoList.innerHTML = '<li class="todo-empty">直近7日以内の予定はないよ。<br>のんびりいこう〜☕️</li>';
+                todoList.innerHTML = '<li class="todo-empty">直近7日以内の予定はないよ。のんびりいこう〜☕️</li>';
                 pagContainer.style.display = 'none';
             }
         }
@@ -784,6 +1150,7 @@
         }
         function changeTaskPage(offset) { currentTaskPage += offset; if (currentTaskPage < 1) currentTaskPage = 1; renderTodoList(); }
 
+        // 済/未リストポップアップの開閉
         window.toggleHistoryPopup = function(e) {
             e.stopPropagation();
             const pop = document.getElementById('historyListPopup');
@@ -802,6 +1169,7 @@
             renderHistoryPopupContents();
         };
 
+        // 済/未リスト内をクリックしたときの編集モード切り替え
         window.clickHistoryItem = function(e, key) {
             e.stopPropagation();
             if (historyEditingKey === key) historyEditingKey = null;
@@ -809,8 +1177,9 @@
             renderHistoryPopupContents();
         };
 
+        // 済/未リスト内でのプルダウン変更処理
         window.changeHistoryStatusInline = function(e, compIdx, taskType) {
-            const newStatus = e.target.value;
+            const newStatus = e.target.value; // '済' or '未'
             if (taskType === 'ES') {
                 if (newStatus === '済') {
                     companies[compIdx].esDone = true;
@@ -834,6 +1203,7 @@
             container.innerHTML = '';
 
             const now = new Date();
+            let rowCounter = 0;
 
             if (currentHistoryTab === 'done') {
                 companies.forEach((comp, compIdx) => {
@@ -889,13 +1259,13 @@
             txtSpan.textContent = text;
             wrapper.appendChild(txtSpan);
 
-            // 修正点1: 「状態：プルダウン」が改行せず一行（横書き）で表示されるよう、構造を最適化
+            // この項目がクリックされて編集状態なら、その場にセレクトボックスを出す
             if (historyEditingKey === key) {
                 const editDiv = document.createElement('div');
                 editDiv.className = 'history-edit-box';
-                editDiv.setAttribute('onclick', 'event.stopPropagation()');
+                editDiv.setAttribute('onclick', 'event.stopPropagation()'); // クリックによる閉じ防止
                 editDiv.innerHTML = `
-                    <span style="font-size:0.7rem; color:var(--text-dark); white-space:nowrap;">状態：</span>
+                    <span style="font-size:0.7rem; color:var(--text-dark);">状態を変更:</span>
                     <select class="history-edit-select" onchange="changeHistoryStatusInline(event, ${compIdx}, '${taskType}')">
                         <option value="済" ${currentVal === '済' ? 'selected' : ''}>済</option>
                         <option value="未" ${currentVal === '未' ? 'selected' : ''}>未</option>
