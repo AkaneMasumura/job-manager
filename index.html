@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>就活スケジュール管理アプリ</title>
     
-    <!-- Firebase SDK (v8形式) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
@@ -140,7 +138,7 @@
             background: #fff; cursor: pointer; color: var(--text-dark);
         }
         .history-tab-btn.active { background: var(--primary-pink); color: white; border-color: var(--primary-pink); }
-        .history-item-row { font-size: 0.75rem; padding: 6px 4px; border-bottom: 1px dashed #ffe3e8; word-break: break-all; }
+        .history-item-row { font-size: 0.75rem; padding: 6px 4px; border-bottom: 1px dashed #ffe3e8; word-break: break-all; color: var(--text-dark); }
         .history-item-row:last-child { border-bottom: none; }
 
         /* 表形式（テーブル表示）用の基本スタイル */
@@ -289,7 +287,6 @@
 
     <div class="container">
         
-        <!-- ヘッダー -->
         <div class="header-area">
             <div id="appTitleDisplay" class="title-editable" onclick="changeAppTitle()">読み込み中...</div>
             <div class="auth-right">
@@ -304,17 +301,14 @@
 
         <div class="flexible-layout-wrapper">
             
-            <!-- 上段セクション (今週やること / カレンダー) -->
             <div class="section-top-row">
                 <div class="pc-top-grid">
-                    <!-- タスク一覧 -->
                     <div class="card">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                             <h3 style="margin:0; color:#ff6b8b; font-size:1.0rem; text-align: left;">📅 今週やるべきこと (直近7日以内)</h3>
                             <button class="action-btn" onclick="toggleHistoryPopup(event)" style="border-color: var(--primary-pink); color: #ff6b8b;">済/未リスト 📋</button>
                         </div>
                         
-                        <!-- 済/未リストポップアップ -->
                         <div id="historyListPopup" class="history-list-popup" onclick="event.stopPropagation()">
                             <div style="display: flex; gap: 8px; margin-bottom: 10px; border-bottom: 2px solid var(--bg-pastel); padding-bottom: 6px;">
                                 <button id="tabDoneBtn" class="history-tab-btn active" onclick="switchHistoryTab('done')">済</button>
@@ -330,7 +324,6 @@
                             <button onclick="changeTaskPage(1)" class="action-btn" style="padding:2px 8px;">次 ▶</button>
                         </div>
                     </div>
-                    <!-- カレンダー側 -->
                     <div>
                         <div id="greetingMessage" class="greeting-box">こんにちは✨</div>
                         <div class="card" style="padding: 16px;">
@@ -348,7 +341,6 @@
                 </div>
             </div>
             
-            <!-- 🏢 エントリー企業の追加 -->
             <div class="card section-add-company" style="padding: 12px 16px;">
                 <h3 style="margin-top:0; color:#ff6b8b; font-size:0.9rem; margin-bottom:8px; text-align: left;">🏢 エントリー企業の追加</h3>
                 <form id="companyForm">
@@ -358,7 +350,6 @@
                         <div><label>マイページURL</label><input type="url" id="mypageUrl" placeholder="https://..."></div>
                         <div><label>マイページID</label><input type="text" id="mypageId"></div>
                         
-                        <!-- ES締切日 -->
                         <div class="date-time-card-box flex-wide">
                             <label style="color:#ff6b8b;">ES締切日</label>
                             <input type="date" id="esDeadlineDate">
@@ -368,7 +359,6 @@
                             </div>
                         </div>
                         
-                        <!-- 次回の予定日時 -->
                         <div class="date-time-card-box flex-wide">
                             <label style="color:#ff6b8b;">次回予定/日時</label>
                             <select id="nextDateType" style="margin-bottom:2px; padding: 2px 4px;">
@@ -404,14 +394,12 @@
                 </form>
             </div>
             
-            <!-- 📊 登録企業一覧 -->
             <div class="card section-company-list">
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
                     <h3 style="margin:0; color:#ff6b8b; font-size:1.0rem; text-align: left;">📊 登録企業一覧</h3>
                     <input type="text" id="searchBox" placeholder="企業名で探す... 🔍" oninput="renderTable()" style="max-width:220px; padding:6px 12px; border-radius:20px; width:100%;">
                 </div>
                 
-                <!-- 💻 パソコン用：従来のテーブル表示 -->
                 <div class="table-responsive">
                     <table>
                         <thead>
@@ -429,7 +417,6 @@
                     </table>
                 </div>
 
-                <!-- 📱 スマホ用 -->
                 <div id="mobileCompanyList" class="mobile-company-list-wrapper"></div>
             </div>
 
@@ -1172,32 +1159,29 @@
             const now = new Date();
 
             if (currentHistoryTab === 'done') {
-                // 【済】条件: ①ボタンで完了にした予定 ②提出済チェックを入れたES
                 let doneItems = [];
                 companies.forEach(comp => {
                     if (comp.esDone) {
-                        doneItems.push(`ES: ${escapeHtml(comp.name)}`);
+                        doneItems.push(`${escapeHtml(comp.name)} ${comp.esDeadline ? comp.esDeadline : ''}`);
                     } else if (comp.esTaskCompleted) {
-                        doneItems.push(`ES完了: ${escapeHtml(comp.name)}`);
+                        doneItems.push(`${escapeHtml(comp.name)} ${comp.esDeadline ? comp.esDeadline : ''}`);
                     }
                     if (comp.interviewTaskCompleted) {
-                        const type = comp.nextDateType ? comp.nextDateType : '予定';
-                        doneItems.push(`${escapeHtml(type)}完了: ${escapeHtml(comp.name)}`);
+                        doneItems.push(`${escapeHtml(comp.name)} ${comp.interviewDate ? comp.interviewDate : ''}`);
                     }
                 });
 
                 if (doneItems.length === 0) {
-                    container.innerHTML = '<div style="font-size:0.75rem; color:#868e96; text-align:center; padding:10px;">完了したタスクはありません</div>';
+                    container.innerHTML = '<div style="font-size:0.75rem; color:#868e96; text-align:center; padding:10px;">表示するデータがありません</div>';
                 } else {
                     doneItems.forEach(item => {
                         const div = document.createElement('div');
                         div.className = 'history-item-row';
-                        div.textContent = `✅ ${item}`;
+                        div.textContent = item;
                         container.appendChild(div);
                     });
                 }
             } else {
-                // 【未】条件: ①期限を過ぎて完了してない選考予定 ②期限を過ぎて未提出・未完了のES
                 let yetItems = [];
                 companies.forEach(comp => {
                     if (comp.status === '不合格') return;
@@ -1205,26 +1189,25 @@
                     if (comp.esDeadline && !comp.esDone && !comp.esTaskCompleted) {
                         const cleanStr = comp.esDeadline.includes(" ") ? comp.esDeadline.replace(/-/g, "/") : comp.esDeadline.replace(/-/g, "/") + " 23:59";
                         if (new Date(cleanStr) < now) {
-                            yetItems.push(`ES超過: ${escapeHtml(comp.name)} (${comp.esDeadline})`);
+                            yetItems.push(`${escapeHtml(comp.name)} ${comp.esDeadline}`);
                         }
                     }
                     if (comp.interviewDate && !comp.interviewTaskCompleted) {
                         const cleanStr = comp.interviewDate.includes(" ") ? comp.interviewDate.replace(/-/g, "/") : comp.interviewDate.replace(/-/g, "/") + " 23:59";
                         if (new Date(cleanStr) < now) {
-                            const type = comp.nextDateType ? comp.nextDateType : '予定';
-                            yetItems.push(`${escapeHtml(type)}超過: ${escapeHtml(comp.name)} (${comp.interviewDate})`);
+                            yetItems.push(`${escapeHtml(comp.name)} ${comp.interviewDate}`);
                         }
                     }
                 });
 
                 if (yetItems.length === 0) {
-                    container.innerHTML = '<div style="font-size:0.75rem; color:#868e96; text-align:center; padding:10px;">期限を過ぎた未完了タスクはありません</div>';
+                    container.innerHTML = '<div style="font-size:0.75rem; color:#868e96; text-align:center; padding:10px;">表示するデータがありません</div>';
                 } else {
                     yetItems.forEach(item => {
                         const div = document.createElement('div');
                         div.className = 'history-item-row';
                         div.style.color = '#fa5252';
-                        div.textContent = `⚠️ ${item}`;
+                        div.textContent = item;
                         container.appendChild(div);
                     });
                 }
@@ -1313,7 +1296,6 @@
                 });
                 
                 if (dayEvents.length > 0) {
-                    // 予定ごとに丸（ドット）を生成して追加
                     dayEvents.forEach(ev => {
                         const dot = document.createElement('span');
                         dot.className = `cal-dot`;
