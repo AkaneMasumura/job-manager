@@ -5,12 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>就活スケジュール管理アプリ</title>
     
-    <!-- Firebase SDK (v8形式) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
@@ -140,8 +138,21 @@
             background: #fff; cursor: pointer; color: var(--text-dark);
         }
         .history-tab-btn.active { background: var(--primary-pink); color: white; border-color: var(--primary-pink); }
-        .history-item-row { font-size: 0.75rem; padding: 6px 4px; border-bottom: 1px dashed #ffe3e8; word-break: break-all; color: var(--text-dark); }
+        
+        /* 済/未リスト内の各行のスタイル */
+        .history-item-row {
+            font-size: 0.75rem; padding: 8px 4px; border-bottom: 1px dashed #ffe3e8;
+            color: var(--text-dark); cursor: pointer; transition: background 0.2s;
+        }
+        .history-item-row:hover { background: #fff0f2; }
         .history-item-row:last-child { border-bottom: none; }
+        
+        /* インライン変更用の簡易フォームエリア */
+        .history-edit-box {
+            display: flex; gap: 6px; align-items: center; margin-top: 4px;
+            background: #fff5f6; padding: 4px; border-radius: 6px; border: 1px dashed var(--primary-pink);
+        }
+        .history-edit-select { padding: 2px; font-size: 0.75rem; border-radius: 4px; border: 1px solid var(--border-soft); }
 
         /* 表形式（テーブル表示）用の基本スタイル */
         .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 10px; }
@@ -289,7 +300,6 @@
 
     <div class="container">
         
-        <!-- ヘッダー -->
         <div class="header-area">
             <div id="appTitleDisplay" class="title-editable" onclick="changeAppTitle()">読み込み中...</div>
             <div class="auth-right">
@@ -304,17 +314,14 @@
 
         <div class="flexible-layout-wrapper">
             
-            <!-- 上段セクション (今週やること / カレンダー) -->
             <div class="section-top-row">
                 <div class="pc-top-grid">
-                    <!-- タスク一覧 -->
                     <div class="card">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px;">
                             <h3 style="margin:0; color:#ff6b8b; font-size:1.0rem; text-align: left;">📅 今週やるべきこと (直近7日以内)</h3>
                             <button class="action-btn" onclick="toggleHistoryPopup(event)" style="border-color: var(--primary-pink); color: #ff6b8b; flex-shrink: 0;">済/未リスト 📋</button>
                         </div>
                         
-                        <!-- 済/未リストポップアップ -->
                         <div id="historyListPopup" class="history-list-popup" onclick="event.stopPropagation()">
                             <div style="display: flex; gap: 8px; margin-bottom: 10px; border-bottom: 2px solid var(--bg-pastel); padding-bottom: 6px;">
                                 <button id="tabDoneBtn" class="history-tab-btn active" onclick="switchHistoryTab('done')">済</button>
@@ -330,7 +337,6 @@
                             <button onclick="changeTaskPage(1)" class="action-btn" style="padding:2px 8px;">次 ▶</button>
                         </div>
                     </div>
-                    <!-- カレンダー側 -->
                     <div>
                         <div id="greetingMessage" class="greeting-box">こんにちは✨</div>
                         <div class="card" style="padding: 16px;">
@@ -348,7 +354,6 @@
                 </div>
             </div>
             
-            <!-- 🏢 エントリー企業の追加 -->
             <div class="card section-add-company" style="padding: 12px 16px;">
                 <h3 style="margin-top:0; color:#ff6b8b; font-size:0.9rem; margin-bottom:8px; text-align: left;">🏢 エントリー企業の追加</h3>
                 <form id="companyForm">
@@ -358,7 +363,6 @@
                         <div><label>マイページURL</label><input type="url" id="mypageUrl" placeholder="https://..."></div>
                         <div><label>マイページID</label><input type="text" id="mypageId"></div>
                         
-                        <!-- ES締切日 -->
                         <div class="date-time-card-box flex-wide">
                             <label style="color:#ff6b8b;">ES締切日</label>
                             <input type="date" id="esDeadlineDate">
@@ -368,7 +372,6 @@
                             </div>
                         </div>
                         
-                        <!-- 次回の予定日時 -->
                         <div class="date-time-card-box flex-wide">
                             <label style="color:#ff6b8b;">次回予定/日時</label>
                             <select id="nextDateType" style="margin-bottom:2px; padding: 2px 4px;">
@@ -404,14 +407,12 @@
                 </form>
             </div>
             
-            <!-- 📊 登録企業一覧 -->
             <div class="card section-company-list">
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px;">
                     <h3 style="margin:0; color:#ff6b8b; font-size:1.0rem; text-align: left;">📊 登録企業一覧</h3>
                     <input type="text" id="searchBox" placeholder="企業名で探す... 🔍" oninput="renderTable()" style="max-width:220px; padding:6px 12px; border-radius:20px; width:100%;">
                 </div>
                 
-                <!-- 💻 パソコン用：従来のテーブル表示 -->
                 <div class="table-responsive">
                     <table>
                         <thead>
@@ -429,7 +430,6 @@
                     </table>
                 </div>
 
-                <!-- 📱 スマホ用 -->
                 <div id="mobileCompanyList" class="mobile-company-list-wrapper"></div>
             </div>
 
@@ -465,6 +465,7 @@
 
         let mobileOpenedIndices = new Set();
         let currentHistoryTab = 'done'; // 'done' or 'yet'
+        let historyEditingKey = null; // 済/未リスト内で編集中のキー追跡用
 
         function initTimeSelectsForElement(hEl, mEl) {
             if(hEl && hEl.options.length === 0) {
@@ -944,8 +945,8 @@
                             <div class="m-detail-row"><span class="m-detail-label">メモ</span><span class="m-detail-value" style="white-space:pre-wrap; background:#fff; padding:4px; border-radius:6px; display:block; border:1px solid #f1f3f5;">${comp.memo ? escapeHtml(comp.memo) : '-'}</span></div>
                             
                             <div style="display:flex; gap:8px; margin-top:10px; justify-content:flex-end;">
-                                <button class="action-btn" onclick="startInlineEdit(${idx})">✏️ この場で編集</button>
-                                <button class="action-btn" style="color:#fa5252;" onclick="deleteCompany(${idx})">🗑️ 削除</button>
+                                <button class="action-btn" onclick="startInlineEdit(${idx})">編集</button>
+                                <button class="action-btn" style="color:#fa5252;" onclick="deleteCompany(${idx})">削除</button>
                             </div>
                         </div>
                     `;
@@ -1065,7 +1066,7 @@
                     if (esDate >= now && esDate <= sevenDaysLater) {
                         allTasks.push({
                             type: 'ES', companyIndex: originalIdx, date: esDate,
-                            html: `🎀 <strong>【ES提出期限】</strong>${escapeHtml(comp.name)}<br>⏰ 締切: ${comp.esDeadline}`,
+                            html: `🎀 <strong>【ES】</strong>${escapeHtml(comp.name)}<br>⏰ 締切: ${comp.esDeadline}`,
                             color: '#ff85a2', bg: '#fff0f3'
                         });
                     }
@@ -1140,7 +1141,10 @@
         
         function completeTask(e, companyIdx, taskType) {
             e.stopPropagation();
-            if (taskType === 'ES') companies[companyIdx].esTaskCompleted = true;
+            if (taskType === 'ES') {
+                companies[companyIdx].esTaskCompleted = true;
+                companies[companyIdx].esDone = true;
+            }
             else companies[companyIdx].interviewTaskCompleted = true;
             saveToFirebase(window.currentUid);
         }
@@ -1153,15 +1157,44 @@
             if (pop) {
                 const isOpen = pop.style.display === 'block';
                 pop.style.display = isOpen ? 'none' : 'block';
-                if (!isOpen) renderHistoryPopupContents();
+                if (!isOpen) { historyEditingKey = null; renderHistoryPopupContents(); }
             }
         };
 
         window.switchHistoryTab = function(tabName) {
             currentHistoryTab = tabName;
+            historyEditingKey = null;
             document.getElementById('tabDoneBtn').classList.toggle('active', tabName === 'done');
             document.getElementById('tabYetBtn').classList.toggle('active', tabName === 'yet');
             renderHistoryPopupContents();
+        };
+
+        // 済/未リスト内をクリックしたときの編集モード切り替え
+        window.clickHistoryItem = function(e, key) {
+            e.stopPropagation();
+            if (historyEditingKey === key) historyEditingKey = null;
+            else historyEditingKey = key;
+            renderHistoryPopupContents();
+        };
+
+        // 済/未リスト内でのプルダウン変更処理
+        window.changeHistoryStatusInline = function(e, compIdx, taskType) {
+            const newStatus = e.target.value; // '済' or '未'
+            if (taskType === 'ES') {
+                if (newStatus === '済') {
+                    companies[compIdx].esDone = true;
+                    companies[compIdx].esTaskCompleted = true;
+                    if (companies[compIdx].status === 'ES作成中') companies[compIdx].status = 'ES提出済み';
+                } else {
+                    companies[compIdx].esDone = false;
+                    companies[compIdx].esTaskCompleted = false;
+                    if (companies[compIdx].status === 'ES提出済み') companies[compIdx].status = 'ES作成中';
+                }
+            } else if (taskType === 'INTERVIEW') {
+                companies[compIdx].interviewTaskCompleted = (newStatus === '済');
+            }
+            historyEditingKey = null;
+            saveToFirebase(window.currentUid);
         };
 
         function renderHistoryPopupContents() {
@@ -1170,61 +1203,78 @@
             container.innerHTML = '';
 
             const now = new Date();
+            let rowCounter = 0;
 
             if (currentHistoryTab === 'done') {
-                let doneItems = [];
-                companies.forEach(comp => {
+                companies.forEach((comp, compIdx) => {
                     if (comp.esDone || comp.esTaskCompleted) {
-                        doneItems.push(`${escapeHtml(comp.name)} ES提出期限 ${comp.esDeadline ? comp.esDeadline : ''}`);
+                        const uniqueKey = `done-es-${compIdx}`;
+                        const displayStr = `${escapeHtml(comp.name)} ES ${comp.esDeadline ? comp.esDeadline : ''}`;
+                        createHistoryRowElement(container, displayStr, uniqueKey, compIdx, 'ES', '済');
                     }
                     if (comp.interviewTaskCompleted) {
                         const label = comp.nextDateType ? comp.nextDateType : '予定';
-                        doneItems.push(`${escapeHtml(comp.name)} ${label} ${comp.interviewDate ? comp.interviewDate : ''}`);
+                        const uniqueKey = `done-int-${compIdx}`;
+                        const displayStr = `${escapeHtml(comp.name)} ${escapeHtml(label)} ${comp.interviewDate ? comp.interviewDate : ''}`;
+                        createHistoryRowElement(container, displayStr, uniqueKey, compIdx, 'INTERVIEW', '済');
                     }
                 });
-
-                if (doneItems.length === 0) {
-                    container.innerHTML = '<div style="font-size:0.75rem; color:#868e96; text-align:center; padding:10px;">表示するデータがありません</div>';
-                } else {
-                    doneItems.forEach(item => {
-                        const div = document.createElement('div');
-                        div.className = 'history-item-row';
-                        div.textContent = item;
-                        container.appendChild(div);
-                    });
-                }
             } else {
-                let yetItems = [];
-                companies.forEach(comp => {
+                companies.forEach((comp, compIdx) => {
                     if (comp.status === '不合格') return;
 
                     if (comp.esDeadline && !comp.esDone && !comp.esTaskCompleted) {
                         const cleanStr = comp.esDeadline.includes(" ") ? comp.esDeadline.replace(/-/g, "/") : comp.esDeadline.replace(/-/g, "/") + " 23:59";
                         if (new Date(cleanStr) < now) {
-                            yetItems.push(`${escapeHtml(comp.name)} ES提出期限 ${comp.esDeadline}`);
+                            const uniqueKey = `yet-es-${compIdx}`;
+                            const displayStr = `${escapeHtml(comp.name)} ES ${comp.esDeadline}`;
+                            createHistoryRowElement(container, displayStr, uniqueKey, compIdx, 'ES', '未');
                         }
                     }
                     if (comp.interviewDate && !comp.interviewTaskCompleted) {
                         const cleanStr = comp.interviewDate.includes(" ") ? comp.interviewDate.replace(/-/g, "/") : comp.interviewDate.replace(/-/g, "/") + " 23:59";
                         if (new Date(cleanStr) < now) {
                             const label = comp.nextDateType ? comp.nextDateType : '予定';
-                            yetItems.push(`${escapeHtml(comp.name)} ${label} ${comp.interviewDate}`);
+                            const uniqueKey = `yet-int-${compIdx}`;
+                            const displayStr = `${escapeHtml(comp.name)} ${escapeHtml(label)} ${comp.interviewDate}`;
+                            createHistoryRowElement(container, displayStr, uniqueKey, compIdx, 'INTERVIEW', '未');
                         }
                     }
                 });
-
-                if (yetItems.length === 0) {
-                    container.innerHTML = '<div style="font-size:0.75rem; color:#868e96; text-align:center; padding:10px;">表示するデータがありません</div>';
-                } else {
-                    yetItems.forEach(item => {
-                        const div = document.createElement('div');
-                        div.className = 'history-item-row';
-                        div.style.color = '#fa5252';
-                        div.textContent = item;
-                        container.appendChild(div);
-                    });
-                }
             }
+
+            if (container.children.length === 0) {
+                container.innerHTML = '<div style="font-size:0.75rem; color:#868e96; text-align:center; padding:10px;">表示するデータがありません</div>';
+            }
+        }
+
+        function createHistoryRowElement(container, text, key, compIdx, taskType, currentVal) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'history-item-row';
+            if (currentVal === '未') wrapper.style.color = '#fa5252';
+            
+            wrapper.setAttribute('onclick', `clickHistoryItem(event, '${key}')`);
+            
+            const txtSpan = document.createElement('span');
+            txtSpan.textContent = text;
+            wrapper.appendChild(txtSpan);
+
+            // この項目がクリックされて編集状態なら、その場にセレクトボックスを出す
+            if (historyEditingKey === key) {
+                const editDiv = document.createElement('div');
+                editDiv.className = 'history-edit-box';
+                editDiv.setAttribute('onclick', 'event.stopPropagation()'); // クリックによる閉じ防止
+                editDiv.innerHTML = `
+                    <span style="font-size:0.7rem; color:var(--text-dark);">状態を変更:</span>
+                    <select class="history-edit-select" onchange="changeHistoryStatusInline(event, ${compIdx}, '${taskType}')">
+                        <option value="済" ${currentVal === '済' ? 'selected' : ''}>済</option>
+                        <option value="未" ${currentVal === '未' ? 'selected' : ''}>未</option>
+                    </select>
+                `;
+                wrapper.appendChild(editDiv);
+            }
+
+            container.appendChild(wrapper);
         }
 
         function changeMonth(offset) { currentCalendarDate.setMonth(currentCalendarDate.getMonth() + offset); renderCalendar(); }
