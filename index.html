@@ -1265,7 +1265,7 @@
                 editDiv.className = 'history-edit-box';
                 editDiv.setAttribute('onclick', 'event.stopPropagation()'); // クリックによる閉じ防止
                 editDiv.innerHTML = `
-                    <span style="font-size:0.7rem; color:var(--text-dark);">状態を変更:</span>
+                    <span style="font-size:0.7rem; color:var(--text-dark);">状態:</span>
                     <select class="history-edit-select" onchange="changeHistoryStatusInline(event, ${compIdx}, '${taskType}')">
                         <option value="済" ${currentVal === '済' ? 'selected' : ''}>済</option>
                         <option value="未" ${currentVal === '未' ? 'selected' : ''}>未</option>
