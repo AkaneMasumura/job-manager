@@ -318,7 +318,7 @@
                 <div class="pc-top-grid">
                     <div class="card">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px;">
-                            <h3 style="margin:0; color:#ff6b8b; font-size:1.0rem; text-align: left;">📅 今週やるべきこと (直近7日以内)</h3>
+                            <h3 style="margin:0; color:#ff6b8b; font-size:1.0rem; text-align: left;">📅 やるべきこと (直近7日以内)</h3>
                             <button class="action-btn" onclick="toggleHistoryPopup(event)" style="border-color: var(--primary-pink); color: #ff6b8b; flex-shrink: 0;">済/未リスト 📋</button>
                         </div>
                         
@@ -1053,6 +1053,8 @@
             todoList.innerHTML = '';
             
             const now = new Date();
+            now.setHours(0, 0, 0, 0);
+            
             const sevenDaysLater = new Date();
             sevenDaysLater.setDate(now.getDate() + 7);
             sevenDaysLater.setHours(23, 59, 59, 999);
